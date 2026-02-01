@@ -3,181 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Desafío Profe Nao ✨</title>
-    <!-- PWA Manifest link (funciona al exportar) -->
+    <title>La Leyenda de la Princesa de las Matemáticas 👑</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e293b"/>
+    <meta name="theme-color" content="#0f0f1a"/>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
     <style>
-        body { font-family: 'Inter', sans-serif; touch-action: manipulation; }
-        /* Ajuste dinámico para la altura de celulares modernos */
-        .screen { 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            height: calc(var(--vh, 1vh) * 100);
-            width: 100%; 
-            padding: 1rem; 
-            box-sizing: border-box; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            transition: opacity 0.3s ease-in-out, visibility 0.3s; 
-            visibility: hidden; 
-            opacity: 0; 
-            overflow-y: auto; 
+        :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --neon-green: #0aff00; --bg-dark: #0f0f1a; }
+        body { font-family: 'Share Tech Mono', monospace; background-color: var(--bg-dark); color: #fff; touch-action: manipulation; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        /* UI General */
+        .title-font { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100vh; height: calc(var(--vh, 1vh) * 100); position: absolute; top: 0; left: 0; z-index: 10; overflow-y: hidden; }
+        .screen.active { display: flex; }
+        
+        .neon-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--neon-blue); color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); transition: all 0.1s; cursor: pointer; }
+        .neon-btn:active { transform: scale(0.95); background: var(--neon-blue); color: #000; }
+
+        /* --- MAPA ZELDA --- */
+        #world-map-container {
+            width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; position: relative; background-color: #1e272e;
+            background: radial-gradient(circle at 50% 50%, #2d3436 0%, #000000 100%);
+            /* background-image: url('mapa_mundo.jpg'); background-size: cover; background-position: center bottom; */
         }
-        .screen.visible { visibility: visible; opacity: 1; }
+        .map-path { display: flex; flex-direction: column-reverse; align-items: center; padding: 150px 0 100px 0; min-height: 100%; width: 100%; position: relative; }
+        .level-node {
+            position: absolute; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 24px; border: 3px solid #555; background: #2d3436; color: #555;
+            transition: transform 0.2s; z-index: 5; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        .level-node.unlocked { background: #000; border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 15px var(--neon-green); cursor: pointer; transform: scale(1.1); }
+        
+        .avatar-marker {
+            position: absolute; top: -60px; left: 50%; transform: translateX(-50%); width: 60px; height: 60px;
+            background-image: url('icono.png'); background-size: cover; border-radius: 50%; border: 2px solid white;
+            box-shadow: 0 0 20px var(--neon-blue); animation: bounce 1.5s infinite; z-index: 10; pointer-events: none;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10px); } }
+
+        /* Intro Screen */
+        .epic-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0f0f1a 100%); z-index: 0; pointer-events: none; }
+        .nebula { position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background-image: radial-gradient(circle at 50% 50%, rgba(76, 29, 149, 0.3), transparent 60%), radial-gradient(circle at 20% 80%, rgba(0, 243, 255, 0.15), transparent 40%); animation: nebulaMove 30s infinite linear; filter: blur(30px); }
+        .stars { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(white 1px, transparent 1px); background-size: 50px 50px; opacity: 0.3; }
+        @keyframes nebulaMove { 0% { transform: rotate(0deg) scale(1); } 100% { transform: rotate(360deg) scale(1); } }
+        #screen-intro { justify-content: flex-start; padding-top: 15vh; }
+
+        /* Game Screen */
+        .glass-panel { background: rgba(20, 20, 35, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px 0 rgba(0,0,0,0.5); }
+        .answer-grid-btn { transition: transform 0.1s; }
+        .answer-grid-btn:active { transform: scale(0.95); }
+        .btn-correct { background-color: var(--neon-green) !important; color: black !important; }
+        .btn-wrong { background-color: #ef4444 !important; }
+        
         .feedback-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.1s ease-in-out; }
         .feedback-overlay.show { opacity: 0.7; }
-        .timer-bar-inner { transition: width 5s linear; height: 100%; background: linear-gradient(90deg, rgba(59,130,246,1) 0%, rgba(37,99,235,1) 100%); }
-        .answer-grid-btn { transition: transform 0.1s ease-out, box-shadow 0.1s ease-out; }
-        .answer-grid-btn:active { transform: scale(0.95); }
-        .gemini-explanation { background-color: rgba(0,0,0,0.2); border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 8px; margin-top: 1rem; text-align: left; }
-        
-        /* Clase para fracciones */
-        .fraction-container { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 0.5rem; }
-        .numerator { border-bottom: 2px solid currentColor; padding: 0 0.2rem; margin-bottom: 0.1rem; line-height: 1; }
-        .denominator { line-height: 1; padding-top: 0.1rem; }
+        .timer-bar-inner { transition: width 5s linear; height: 100%; background: linear-gradient(90deg, var(--neon-blue) 0%, var(--neon-pink) 100%); }
     </style>
 </head>
-<body class="bg-slate-900 text-white overflow-hidden">
+<body>
 
-    <main id="app-container">
-        <!-- 1. Pantalla de Bienvenida -->
-        <section id="name-screen" class="screen">
-            <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl text-center w-full max-w-md">
-                <h1 class="text-3xl font-bold mb-2 text-blue-400 font-black">DESAFÍO PROFE NAO</h1>
-                <p class="text-slate-400 mb-6">¿Cuál es tu nombre?</p>
-                <input id="name-input" type="text" placeholder="Escribe tu nombre..." class="w-full bg-slate-700 text-white p-4 rounded-lg text-center text-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button id="start-btn" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg text-lg transition-transform transform active:scale-95">Comenzar</button>
-            </div>
-        </section>
+    <div class="epic-bg"><div class="nebula"></div><div class="stars"></div></div>
+
+    <!-- 1. INTRO -->
+    <section id="screen-intro" class="screen active p-8 text-center bg-transparent z-20">
+        <h1 class="text-4xl md:text-5xl mb-8 title-font text-white font-black tracking-widest drop-shadow-lg leading-tight text-shadow">
+            LA LEYENDA DE LA<br><span style="color:var(--neon-pink)">PRINCESA</span> DE LAS<br><span style="color:var(--neon-blue)">MATEMÁTICAS</span>
+        </h1>
         
-        <!-- 2. Pantalla de Categorías -->
-        <section id="category-screen" class="screen">
-            <div class="w-full max-w-md text-center">
-                <h1 id="category-welcome-message" class="text-2xl md:text-3xl font-bold mb-8">¿Qué quieres practicar hoy?</h1>
-                <div class="space-y-4">
-                    <button data-category="Números" class="category-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-6 rounded-xl text-2xl shadow-lg transition-transform active:scale-95">Números</button>
-                    <button data-category="Álgebra" class="category-btn w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-6 rounded-xl text-2xl shadow-lg transition-transform active:scale-95">Álgebra</button>
+        <div class="glass-panel p-4 rounded-xl mb-6 text-left text-sm border-l-4 border-cyan-400 w-full max-w-sm mx-auto">
+            <p class="text-cyan-300 font-bold mb-1">> SISTEMA REINICIADO</p>
+            <p class="text-gray-300">Bienvenida, Guerrera.</p>
+        </div>
+
+        <input id="inp-name" type="text" placeholder="TU NOMBRE" class="w-full max-w-sm bg-black/60 text-white p-4 mb-4 text-center text-xl font-bold border-2 border-cyan-500 rounded-lg outline-none uppercase placeholder-gray-500 focus:shadow-[0_0_15px_#00f3ff] transition-shadow">
+        
+        <button id="btn-start" class="neon-btn w-full max-w-sm py-4 rounded-lg text-xl title-font font-black tracking-widest hover:scale-105 transition-transform">INGRESAR</button>
+
+        <footer class="mt-auto pb-8 flex flex-row items-center justify-center gap-6 w-full">
+            <a href="https://www.instagram.com/la_transformada_de_Naomi" target="_blank" class="flex items-center gap-2 text-pink-400 font-bold text-xs bg-black/50 px-4 py-2 rounded-full border border-pink-500/30">
+                <span>📸</span> @la_transformada_de_Naomi
+            </a>
+            <a href="https://www.tiktok.com/@la_transformada_de_naomi" target="_blank" class="flex items-center gap-2 text-cyan-400 font-bold text-xs bg-black/50 px-4 py-2 rounded-full border border-cyan-500/30">
+                <span>🎵</span> @la_transformada_de_naomi
+            </a>
+        </footer>
+    </section>
+
+    <!-- 2. MAPA -->
+    <section id="screen-map" class="screen bg-transparent">
+        <div class="absolute top-0 w-full bg-black/90 p-3 z-30 border-b border-white/10 flex justify-between items-center shadow-lg">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-full bg-slate-700 border border-white overflow-hidden">
+                    <img src="icono.png" class="w-full h-full object-cover">
+                </div>
+                <div class="flex flex-col text-left">
+                    <span id="ui-player-name" class="title-font text-cyan-400 text-sm leading-none"></span>
+                    <span class="text-xs text-gray-400">Nivel <span id="ui-level-num">1</span></span>
                 </div>
             </div>
-        </section>
-
-        <!-- 3. Pantalla de Menú de Juegos -->
-        <section id="menu-screen" class="screen">
-            <div class="w-full max-w-3xl text-center">
-                <h1 id="welcome-message" class="text-2xl font-bold mb-8"></h1>
-                <div id="game-menu-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
-                <button id="back-to-category-btn" class="mt-12 text-slate-400 hover:text-white transition underline">← Volver atrás</button>
+            <div class="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-full border border-yellow-500/30">
+                <span class="text-yellow-400">⭐</span>
+                <span id="ui-total-stars" class="font-bold text-yellow-100">0</span>
             </div>
-        </section>
+        </div>
 
-        <!-- 4. Pantalla de Juego -->
-        <section id="game-screen" class="screen flex-col justify-between py-4">
-            <header class="w-full max-w-4xl px-4 flex justify-between items-center">
-                <div id="lives-container" class="flex gap-1"></div>
-                <div class="text-center">
-                    <span class="text-3xl font-black text-blue-400" id="score">0</span>
+        <div id="world-map-container">
+            <div id="map-nodes-layer" class="relative w-full h-[1500px]"></div>
+        </div>
+
+        <div class="absolute bottom-4 left-4 z-30">
+             <button id="btn-logout" class="bg-red-900/80 text-red-200 text-xs px-3 py-2 rounded border border-red-500 shadow-lg">SALIR</button>
+        </div>
+    </section>
+
+    <!-- 3. JUEGO -->
+    <section id="screen-game" class="screen bg-slate-900/95 z-40">
+        <div class="w-full max-w-lg flex flex-col h-full justify-between p-4 pb-8">
+            
+            <!-- HUD MEJORADO: SCORE + COUNTER -->
+            <header class="flex justify-between items-end w-full mb-4 pt-2 border-b border-white/10 pb-2">
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Vidas</span>
+                    <div id="game-lives" class="text-xl">❤️❤️❤️</div>
                 </div>
-                 <div class="text-right">
-                    <span class="text-xl font-bold text-slate-400" id="question-counter"></span>
+                
+                <div class="flex flex-col items-center">
+                     <span class="text-[10px] text-cyan-400 font-bold uppercase">Puntos</span>
+                     <span id="game-score" class="text-2xl font-black text-white title-font">0</span>
+                </div>
+
+                <div class="flex flex-col items-end">
+                    <button id="btn-game-exit" class="text-xs text-red-400 hover:text-white font-bold border border-red-500/50 rounded px-2 py-1 mb-1">MAPA</button>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Meta</span>
+                    <span id="question-counter" class="text-xl font-bold text-white">1/5</span>
                 </div>
             </header>
             
-            <div class="w-full max-w-4xl px-4 mt-2">
-                <div class="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
-                    <div id="timer-bar" class="timer-bar-inner w-full"></div>
-                </div>
+            <div class="w-full bg-slate-800 h-3 rounded-full mb-6 overflow-hidden border border-slate-600 relative">
+                <div id="timer-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-600 w-full transition-all duration-1000 ease-linear"></div>
             </div>
 
             <div class="flex-grow flex flex-col items-center justify-center text-center px-4 relative w-full">
-                <!-- Se agregó 'leading-tight' para mejor lectura en expresiones largas -->
-                <h2 id="question" class="text-4xl md:text-6xl font-bold mb-2 break-words max-w-full leading-tight flex flex-col md:flex-row items-center justify-center gap-2"></h2>
-                
-                <button id="hint-btn" class="mt-6 p-3 bg-slate-700/50 rounded-full hover:bg-slate-600 transition flex items-center gap-2 border border-slate-600">
-                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                    <span class="text-sm font-semibold text-yellow-400">Ayuda (Pausa)</span>
-                </button>
-            </div>
-
-            <!-- Footer con margen inferior grande (pb-24) para subir las respuestas -->
-            <footer class="w-full max-w-4xl p-2 pb-24">
-                <div id="answer-grid" class="gap-3 mx-auto"></div>
-            </footer>
-        </section>
-
-        <!-- 5. Pantalla de Fin de Juego -->
-        <section id="game-over-screen" class="screen">
-            <div class="bg-slate-800 p-8 rounded-3xl shadow-2xl text-center w-full max-w-md">
-                <h1 class="text-3xl font-black mb-2 text-red-400">¡Juego Terminado!</h1>
-                <p id="final-score" class="text-6xl font-black mb-6">0</p>
-                <div id="gemini-help-container" class="hidden text-left mt-4 border-t border-slate-700 pt-4">
-                    <p class="text-slate-400 text-sm mb-2 italic">Fallaste aquí:</p>
-                    <p id="last-failed-question" class="font-bold text-lg bg-slate-900/50 p-3 rounded-xl mb-4 text-center flex items-center justify-center"></p>
-                    <button id="gemini-explain-btn" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-3 px-5 rounded-xl transition active:scale-95">✨ Explicación con IA</button>
-                    <div id="gemini-explanation-container" class="mt-4 text-sm max-h-40 overflow-y-auto"></div>
-                </div>
-                <div class="flex gap-3 mt-8">
-                    <button id="play-again-btn" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl active:scale-95">Reiniciar</button>
-                    <button id="back-to-menu-btn" class="w-full bg-slate-600 text-white font-bold py-4 rounded-xl active:scale-95">Menú</button>
+                <div class="glass-panel w-full p-8 rounded-2xl border border-cyan-500/50 text-center relative">
+                    <h2 id="game-level-title" class="text-xs text-cyan-300 uppercase tracking-widest mb-2 font-bold">NIVEL 1</h2>
+                    <h2 id="game-question" class="text-5xl font-bold mb-4 text-white drop-shadow-md"></h2>
+                    <button id="btn-hint" class="absolute -top-4 -right-4 bg-yellow-400 text-black w-10 h-10 rounded-full font-bold border-2 border-white shadow-lg animate-bounce text-xl flex items-center justify-center">?</button>
                 </div>
             </div>
-        </section>
-        
-        <!-- 6. Pantalla de Puntajes -->
-        <section id="scores-screen" class="screen">
-             <div class="bg-slate-800 p-8 rounded-3xl shadow-2xl w-full max-w-md">
-                <h1 class="text-2xl font-black mb-6 text-center text-blue-400 uppercase tracking-widest">Mis Récords</h1>
-                <div id="scores-list" class="space-y-3 max-h-[50vh] overflow-y-auto pr-2"></div>
-                <button id="scores-back-btn" class="mt-8 w-full bg-slate-600 text-white font-bold py-4 rounded-xl active:scale-95">Volver</button>
-            </div>
-        </section>
-    </main>
 
-    <!-- Modales y Feedback -->
-    <div id="feedback-correct" class="feedback-overlay bg-green-500"></div>
-    <div id="feedback-incorrect" class="feedback-overlay bg-red-500"></div>
-    
-    <div id="hint-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[1001] p-6">
-        <div class="bg-slate-800 p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center border-2 border-yellow-500/30">
-            <div class="mb-4 bg-yellow-500/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <div id="game-options" class="grid grid-cols-2 gap-4 mt-6"></div>
+            
+            <button id="btn-abandon" class="mt-auto text-slate-500 text-sm uppercase tracking-widest pb-4 hover:text-white transition-colors">Abandonar Misión</button>
+        </div>
+    </section>
+
+    <!-- MODAL FIN -->
+    <div id="modal-result" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-6">
+        <div class="bg-slate-800 border-2 border-white p-8 rounded-2xl text-center w-full max-w-sm">
+            <h1 id="res-title" class="text-3xl title-font mb-4"></h1>
+            <div id="res-stars" class="text-5xl mb-6 text-yellow-400"></div>
+            <p id="res-msg" class="text-gray-300 mb-8 font-bold"></p>
+            <div class="flex gap-3">
+                <button id="btn-retry" class="flex-1 bg-cyan-600 text-white font-bold py-3 rounded hover:bg-cyan-500">REINTENTAR</button>
+                <button id="btn-map-return" class="flex-1 bg-slate-600 text-white font-bold py-3 rounded hover:bg-slate-500">MAPA</button>
             </div>
-            <h3 class="text-xl font-bold text-yellow-400 mb-4 uppercase">Propiedad Matemática</h3>
-            <div id="hint-text" class="text-2xl font-bold bg-slate-900 p-6 rounded-2xl mb-6 text-blue-300"></div>
-            <button id="close-hint-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 px-4 rounded-xl shadow-lg active:scale-95">¡ENTENDIDO, CONTINUAR!</button>
         </div>
     </div>
-    
-    <!-- Footer Redes Sociales (VERTICAL) -->
-    <footer id="social-footer" class="fixed bottom-0 left-0 w-full p-4 flex justify-center items-center z-[500]">
-        <div class="flex flex-col items-center gap-4 bg-slate-800/90 backdrop-blur-md px-10 py-4 rounded-3xl border border-slate-700 shadow-2xl mb-4">
-            <a href="https://www.instagram.com/la_transformada_de_Naomi" target="_blank" class="flex items-center gap-2 text-slate-300 hover:text-pink-400 transition-colors text-xs font-bold uppercase tracking-wide">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.282.24.705.275 1.486.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"/></svg>
-                <span>@la_transformada_de_Naomi</span>
-            </a>
-            <a href="https://www.tiktok.com/@la_transformada_de_naomi" target="_blank" class="flex items-center gap-2 text-slate-300 hover:text-blue-400 transition-colors text-xs font-bold uppercase tracking-wide">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><path d="M9 0h1.98c.144.715.54 1.617 1.235 2.512C12.895 3.389 13.797 4 15 4v2c-1.753 0-3.07-.814-4-1.829V11a5 5 0 1 1-5-5v2a3 3 0 1 0 3 3V0Z"/></svg>
-                 <span>@la_transformada_de_naomi</span>
-            </a>
+
+    <!-- MODAL PISTA -->
+    <div id="modal-hint" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-6">
+        <div class="bg-slate-900 border-2 border-yellow-500 p-6 rounded-2xl w-full max-w-sm text-center">
+            <h3 class="text-yellow-400 font-bold text-xl mb-4 title-font">PISTA</h3>
+            <p id="hint-content" class="text-xl text-white mb-6"></p>
+            <button id="btn-close-hint" class="w-full bg-yellow-600 text-black font-bold py-3 rounded">ENTENDIDO</button>
         </div>
-    </footer>
+    </div>
+
+    <div id="fb-ok" class="feedback-overlay bg-green-500/80 backdrop-blur"></div>
+    <div id="fb-err" class="feedback-overlay bg-red-500/80 backdrop-blur"></div>
 
     <script>
-        // --- Altura dinámica para celulares ---
         function setVh() {
             let vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -185,572 +192,270 @@
         window.addEventListener('resize', setVh);
         setVh();
 
-        // --- Service Worker ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(reg => console.log('SW OK'), err => console.log('SW Error'));
+                if (!window.location.protocol.includes('blob')) {
+                    navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
+                }
             });
         }
 
-        // --- Helper de Fracciones ---
-        function formatFraction(n, d) {
-            return `<div class="fraction-container"><span class="numerator">${n}</span><span class="denominator">${d}</span></div>`;
-        }
+        // --- DATOS DE NIVELES ---
+        const MAP_POSITIONS = [
+            { l: 50, b: 5 }, { l: 30, b: 12 }, { l: 20, b: 20 }, { l: 40, b: 28 }, { l: 70, b: 35 },
+            { l: 80, b: 45 }, { l: 60, b: 55 }, { l: 30, b: 65 }, { l: 50, b: 75 }, { l: 50, b: 85 }
+        ];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const screens = { name: document.getElementById('name-screen'), category: document.getElementById('category-screen'), menu: document.getElementById('menu-screen'), game: document.getElementById('game-screen'), gameOver: document.getElementById('game-over-screen'), scores: document.getElementById('scores-screen') };
-            const nameInput = document.getElementById('name-input');
-            const startBtn = document.getElementById('start-btn');
-            const categoryWelcomeMessage = document.getElementById('category-welcome-message');
-            const welcomeMessage = document.getElementById('welcome-message');
-            const gameMenuGrid = document.getElementById('game-menu-grid');
-            const livesContainer = document.getElementById('lives-container');
-            const scoreDisplay = document.getElementById('score');
-            const questionCounterDisplay = document.getElementById('question-counter');
-            const timerBar = document.getElementById('timer-bar');
-            const questionDisplay = document.getElementById('question');
-            const answerGrid = document.getElementById('answer-grid');
-            const finalScoreDisplay = document.getElementById('final-score');
-            const hintBtn = document.getElementById('hint-btn');
-            const hintModal = document.getElementById('hint-modal');
-            const hintText = document.getElementById('hint-text');
-            const closeHintBtn = document.getElementById('close-hint-btn');
-            const socialFooter = document.getElementById('social-footer');
+        const LEVELS = {
+            1: { title: "Suma Inicial", type: 'suma', count: 5, time: 20, hint: "Agrupa." },
+            // ... (Otros niveles se irán agregando aquí)
+        };
 
-            let state = {
-                playerName: '', currentGameType: null, currentCategory: null,
-                score: 0, lives: 3, timerInterval: null, highScores: {}, questionNumber: 0,
-                currentCorrectAnswer: null, lastFailedQuestion: null, lastFailedQuestionText: '',
-                generatedQuestions: new Set(), currentHint: '', timerStartTime: null, timeRemaining: 0,
-                isPaused: false
-            };
+        const app = {
+            state: { name: "", unlocked: 1, stars: {}, currentLevel: 1 },
+            gameState: { score: 0, lives: 3, qIndex: 0, timer: null, qData: null },
+            audioCtx: false, synth: null,
+            totalLevels: 10,
 
-            const GAME_MODES = {
-                'Números': [ 'Suma y Resta', 'Multiplicación', 'División', 'Potencias', 'Potencias 2', 'Raíces', 'Descomposición de Raíces', 'Logaritmos', 'Mínimo Común Múltiplo', 'Descomposición de Factores', 'Amplificación', 'Simplificación (Divisor)', 'Simplificación (Resultado)', 'Puntajes' ],
-                'Álgebra': [ 'Factorización', 'Productos Notables', 'Identifica P. Notable', 'Identifica Factorización', 'Puntajes' ]
-            };
+            init: function() {
+                const save = localStorage.getItem('naoCleanSave');
+                if (save) this.state = { ...this.state, ...JSON.parse(save) };
 
-            const MAX_QUESTIONS_NUMBERS = 80;
-            const MAX_QUESTIONS_ALGEBRA = 40;
-            const TIMER_NUMBERS = 5;
-            const TIMER_ALGEBRA = 8;
-            const IDENTIFY_GAMES = ['Identifica P. Notable', 'Identifica Factorización'];
-
-            let correctSound, incorrectSound, audioInitialized = false;
-
-            async function initAudio() {
-                if (audioInitialized) return;
-                try {
-                    await Tone.start();
-                    correctSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 } }).toDestination();
-                    incorrectSound = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 0.1 } }).toDestination();
-                    audioInitialized = true;
-                } catch (e) {}
-            }
-
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=`;
-
-            async function getGeminiExplanation() {
-                const container = document.getElementById('gemini-explanation-container');
-                container.innerHTML = `<p class="text-blue-400 animate-pulse italic">Gemini está analizando el problema...</p>`;
-                const sys = "Eres una profesora de matemáticas experta. Explica la solución paso a paso de forma motivadora y sencilla.";
-                // Usar texto plano si es fracción HTML
-                let qText = state.lastFailedQuestionText;
-                if(qText.includes('fraction-container')) qText = qText.replace(/<[^>]*>/g, '');
+                // Event Listeners Seguros
+                document.getElementById('btn-start').onclick = () => this.login();
+                document.getElementById('btn-logout').onclick = () => { localStorage.removeItem('naoCleanSave'); location.reload(); };
                 
-                const user = `Explica cómo resolver '${qText}' paso a paso. El juego es '${state.currentGameType}'.`;
-                try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: user }] }], systemInstruction: { parts: [{ text: sys }] } }),
-                    });
-                    const data = await response.json();
-                    const text = data.candidates[0].content.parts[0].text;
-                    container.innerHTML = `<div class="bg-slate-700/50 p-4 rounded-xl text-slate-200">${marked.parse(text)}</div>`;
-                } catch (e) { container.innerHTML = "Error al conectar con la IA."; }
-            }
-            
-            function showScreen(screenName) {
-                Object.values(screens).forEach(screen => screen.classList.remove('visible'));
-                if (screens[screenName]) screens[screenName].classList.add('visible');
+                document.getElementById('btn-game-exit').onclick = () => this.showMap();
+                document.getElementById('btn-abandon').onclick = () => this.showMap();
+                document.getElementById('btn-hint').onclick = () => this.showHint();
+                document.getElementById('btn-close-hint').onclick = () => this.resumeGame();
                 
-                // Mostrar footer social solo en Inicio y Categorías
-                if(screenName === 'name' || screenName === 'category') {
-                    socialFooter.classList.remove('hidden');
-                } else {
-                    socialFooter.classList.add('hidden');
+                document.getElementById('btn-retry').onclick = () => this.playLevel(this.state.currentLevel);
+                document.getElementById('btn-map-return').onclick = () => this.showMap();
+
+                if (this.state.name) this.showMap();
+                else this.showScreen('screen-intro');
+            },
+
+            login: async function() {
+                const name = document.getElementById('inp-name').value.trim();
+                if (name) {
+                    await this.initAudio();
+                    this.state.name = name;
+                    this.save();
+                    this.showMap();
                 }
-            }
-            
-            function save() { localStorage.setItem('mathChallengeData', JSON.stringify({ playerName: state.playerName, highScores: state.highScores })); }
-            function load() {
-                const data = localStorage.getItem('mathChallengeData');
-                if (data) {
-                    const d = JSON.parse(data);
-                    state.playerName = d.playerName;
-                    state.highScores = d.highScores || {};
-                    return true;
-                }
-                return false;
-            }
+            },
 
-            function init() {
-                if (load() && state.playerName) {
-                    categoryWelcomeMessage.textContent = `Hola, ${state.playerName}`;
-                    showScreen('category');
-                } else { showScreen('name'); }
+            showScreen: function(id) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                document.getElementById('modal-result').classList.add('hidden');
+                document.getElementById('modal-hint').classList.add('hidden');
+            },
+
+            showMap: function() {
+                this.showScreen('screen-map');
+                document.getElementById('ui-player-name').innerText = this.state.name;
                 
-                startBtn.onclick = async () => {
-                    const n = nameInput.value.trim();
-                    if (n) {
-                        await initAudio();
-                        state.playerName = n;
-                        save();
-                        categoryWelcomeMessage.textContent = `Hola, ${n}`;
-                        showScreen('category');
-                    }
-                };
+                let total = 0; Object.values(this.state.stars).forEach(s => total += s);
+                document.getElementById('ui-total-stars').innerText = total;
 
-                document.querySelectorAll('.category-btn').forEach(btn => {
-                    btn.onclick = () => {
-                        state.currentCategory = btn.dataset.category;
-                        populateMenu(state.currentCategory);
-                        showScreen('menu');
-                    };
-                });
+                const layer = document.getElementById('map-nodes-layer');
+                layer.innerHTML = '';
 
-                document.getElementById('back-to-category-btn').onclick = () => showScreen('category');
-                document.getElementById('play-again-btn').onclick = () => startGame(state.currentGameType);
-                document.getElementById('back-to-menu-btn').onclick = () => showScreen('menu');
-                document.getElementById('scores-back-btn').onclick = () => showScreen('menu');
-                
-                hintBtn.onclick = () => {
-                    state.isPaused = true;
-                    clearInterval(state.timerInterval);
-                    const elapsed = Date.now() - state.timerStartTime;
-                    state.timeRemaining -= elapsed;
-                    hintText.innerHTML = state.currentHint;
-                    hintModal.classList.remove('hidden');
-                };
-
-                closeHintBtn.onclick = () => {
-                    hintModal.classList.add('hidden');
-                    state.isPaused = false;
-                    resumeTimer();
-                };
-
-                document.getElementById('gemini-explain-btn').onclick = getGeminiExplanation;
-            }
-
-            function populateMenu(cat) {
-                gameMenuGrid.innerHTML = '';
-                welcomeMessage.textContent = `Práctica de ${cat}`;
-                GAME_MODES[cat].forEach(mode => {
-                    const b = document.createElement('button');
-                    b.className = "p-4 bg-slate-800 rounded-xl text-sm font-bold border border-slate-700 active:bg-blue-600 transition-colors";
-                    b.textContent = mode;
-                    if (mode === 'Puntajes') {
-                        b.onclick = showScores;
-                        b.classList.add('text-yellow-400');
-                    } else { b.onclick = () => startGame(mode); }
-                    gameMenuGrid.appendChild(b);
-                });
-            }
-            
-            function startGame(type) {
-                state.currentGameType = type;
-                state.score = 0; state.lives = 3; state.questionNumber = 0;
-                state.generatedQuestions.clear();
-                document.getElementById('gemini-help-container').classList.add('hidden');
-                document.getElementById('gemini-explanation-container').innerHTML = '';
-                nextQuestion();
-                showScreen('game');
-            }
-
-            function nextQuestion() {
-                const max = state.currentCategory === 'Álgebra' ? 40 : 80;
-                if (state.questionNumber >= max) { endGame(); return; }
-                state.questionNumber++;
-                updateHUD();
-
-                const q = generateQuestion(state.currentGameType, state.questionNumber);
-                questionDisplay.innerHTML = q.question;
-                state.currentCorrectAnswer = q.correctAnswer;
-                state.currentHint = q.hint;
-                state.lastFailedQuestionText = q.questionText; // Para IA
-
-                answerGrid.innerHTML = '';
-                const isIdentifyGame = IDENTIFY_GAMES.includes(state.currentGameType);
-                
-                if (isIdentifyGame) {
-                    answerGrid.className = 'flex flex-col gap-3 max-w-lg mx-auto w-full';
-                } else {
-                    answerGrid.className = 'grid grid-cols-2 gap-3 mx-auto w-full';
-                }
-                
-                let answers = [];
-                if (isIdentifyGame) {
-                    answers = shuffleArray(q.answers);
-                } else {
-                    answers = shuffleArray(q.answers.length > 0 ? q.answers : generateOptions(q.correctAnswer));
-                }
-                
-                answers.forEach(ans => {
-                    const b = document.createElement('button');
-                    const baseStyle = "bg-slate-700 rounded-2xl font-bold border-b-4 border-slate-900 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center";
-                    const typeStyle = isIdentifyGame ? "p-5 text-lg text-left" : "p-6 text-xl text-center";
+                for (let i = 1; i <= this.totalLevels; i++) {
+                    const pos = MAP_POSITIONS[i-1];
+                    const unlocked = i <= this.state.unlocked;
+                    const stars = this.state.stars[i] || 0;
                     
-                    b.className = `${baseStyle} ${typeStyle} answer-grid-btn`;
-                    b.innerHTML = ans;
-                    b.onclick = () => handleAnswer(ans === state.currentCorrectAnswer, q);
-                    answerGrid.appendChild(b);
-                });
+                    const btn = document.createElement('div');
+                    btn.className = `level-node absolute transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center border-4 font-bold cursor-pointer transition-all duration-200 shadow-lg ${unlocked ? 'bg-black border-green-400 text-green-400 hover:scale-110' : 'bg-gray-700 border-gray-500 text-gray-500 grayscale'}`;
+                    btn.style.left = pos.l + '%'; btn.style.bottom = pos.b + '%';
+                    btn.style.width = '70px'; btn.style.height = '70px'; btn.style.borderRadius = '50%';
+                    btn.innerHTML = i;
 
-                startTimer();
-            }
+                    if (i === this.state.unlocked) {
+                        const avatar = document.createElement('div');
+                        avatar.className = "absolute -top-12 left-1/2 -translate-x-1/2 w-12 h-12 bg-white rounded-full border-2 border-blue-400 z-20 shadow-[0_0_15px_#00f3ff] animate-bounce";
+                        avatar.style.backgroundImage = "url('icono.png')";
+                        avatar.style.backgroundSize = "cover";
+                        btn.appendChild(avatar);
+                        setTimeout(() => btn.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+                    }
 
-            function handleAnswer(correct, qData) {
-                clearInterval(state.timerInterval);
-                if (correct) {
-                    state.score += 100;
-                    playFeedback(true);
-                    setTimeout(nextQuestion, 200);
+                    if (unlocked) {
+                        btn.onclick = () => { this.playTone('click'); this.playLevel(i); };
+                        if (stars > 0) {
+                            const sDiv = document.createElement('div');
+                            sDiv.className = "absolute -bottom-6 text-yellow-400 text-xs";
+                            sDiv.innerText = "★".repeat(stars);
+                            btn.appendChild(sDiv);
+                        }
+                    }
+                    layer.appendChild(btn);
+                }
+            },
+
+            playLevel: function(id) {
+                this.state.currentLevel = id;
+                const config = this.levels[id];
+                if (config) {
+                    this.startQuiz(config);
                 } else {
-                    state.lives--;
-                    state.lastFailedQuestion = qData;
-                    playFeedback(false);
-                    if (state.lives < 0) setTimeout(endGame, 200);
-                    else setTimeout(nextQuestion, 200);
+                    alert("Nivel en construcción.");
                 }
-                updateHUD();
-            }
-            
-            function startTimer() {
-                clearInterval(state.timerInterval);
-                const limit = state.currentCategory === 'Álgebra' ? TIMER_ALGEBRA : TIMER_NUMBERS;
-                state.timeRemaining = limit * 1000;
-                timerBar.style.transition = 'none';
-                timerBar.style.width = '100%';
-                void timerBar.offsetWidth; // Force reflow
+            },
+
+            startQuiz: function(config) {
+                this.gameState = { score: 0, lives: 3, qIndex: 0 };
+                this.showScreen('screen-game');
+                this.nextQuestion(config);
+            },
+
+            nextQuestion: function(config) {
+                if (this.gameState.qIndex >= config.count) {
+                    this.endLevel(true);
+                    return;
+                }
+                this.gameState.qIndex++;
+                this.updateHUD(config);
+
+                const q = this.generateMath(config.type, this.gameState.qIndex);
+                this.gameState.qData = q;
+                document.getElementById('game-question').innerText = q.q;
+
+                const grid = document.getElementById('game-options');
+                grid.innerHTML = '';
                 
-                timerBar.style.transition = `width ${limit}s linear`;
-                timerBar.style.width = '0%';
+                let opts = new Set([q.a]);
+                while(opts.size < 4) opts.add(q.a + (Math.floor(Math.random()*10)-5) || q.a+1);
                 
-                state.timerStartTime = Date.now();
+                Array.from(opts).sort(()=>Math.random()-0.5).forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = "bg-slate-700/80 border-b-4 border-slate-900 text-white font-bold py-6 rounded-xl text-xl active:border-b-0 active:translate-y-1 transition-all";
+                    btn.innerText = opt;
+                    btn.onclick = (e) => this.checkAnswer(opt === q.a, e.target, config);
+                    grid.appendChild(btn);
+                });
                 
-                state.timerInterval = setTimeout(() => handleAnswer(false, state.lastFailedQuestion || {question: 'Tiempo'}), state.timeRemaining);
-            }
+                this.startTimer(config.time, config);
+            },
 
-            function resumeTimer() {
-                if (state.timeRemaining <= 0) return;
-                timerBar.style.transition = `width ${state.timeRemaining / 1000}s linear`;
-                timerBar.style.width = '0%';
-                state.timerStartTime = Date.now();
-                state.timerInterval = setTimeout(() => handleAnswer(false, state.lastFailedQuestion || {question: 'Tiempo'}), state.timeRemaining);
-            }
-
-            function endGame() {
-                clearInterval(state.timerInterval);
-                finalScoreDisplay.textContent = state.score;
-                if (state.score > (state.highScores[state.currentGameType] || 0)) {
-                    state.highScores[state.currentGameType] = state.score;
-                    save();
+            checkAnswer: function(isCorrect, btn, config) {
+                clearInterval(this.gameState.timer);
+                if (isCorrect) {
+                    if(btn) { btn.classList.remove('bg-slate-700/80'); btn.classList.add('bg-green-500', 'border-green-700'); }
+                    this.gameState.score++;
+                    this.playTone('correct');
+                    this.flash('fb-ok');
+                    setTimeout(() => this.nextQuestion(config), 500);
+                } else {
+                    if(btn) { btn.classList.remove('bg-slate-700/80'); btn.classList.add('bg-red-500', 'border-red-700'); }
+                    this.gameState.lives--;
+                    this.playTone('wrong');
+                    this.flash('fb-err');
+                    if (this.gameState.lives <= 0) setTimeout(() => this.endLevel(false), 500);
+                    else setTimeout(() => this.nextQuestion(config), 500);
                 }
-                if (state.lastFailedQuestion) {
-                    document.getElementById('last-failed-question').innerHTML = state.lastFailedQuestion.question;
-                    document.getElementById('gemini-help-container').classList.remove('hidden');
+                this.updateHUD(config);
+            },
+
+            startTimer: function(sec, config) {
+                clearInterval(this.gameState.timer);
+                const bar = document.getElementById('timer-bar');
+                bar.style.transition = 'none'; bar.style.width = '100%'; void bar.offsetWidth;
+                bar.style.transition = `width ${sec}s linear`; bar.style.width = '0%';
+                this.gameState.timerStart = Date.now();
+                this.gameState.timerLeft = sec * 1000;
+                this.gameState.timer = setTimeout(() => this.checkAnswer(false, null, config), sec * 1000);
+            },
+
+            showHint: function() {
+                clearInterval(this.gameState.timer);
+                const elapsed = Date.now() - this.gameState.timerStart;
+                this.gameState.timerLeft -= elapsed;
+                const bar = document.getElementById('timer-bar');
+                bar.style.transition = 'none';
+                bar.style.width = window.getComputedStyle(bar).width;
+                document.getElementById('hint-content').innerText = this.levels[this.state.currentLevel].hint;
+                document.getElementById('modal-hint').classList.remove('hidden');
+            },
+
+            resumeGame: function() {
+                document.getElementById('modal-hint').classList.add('hidden');
+                if (this.gameState.timerLeft > 0) {
+                    const bar = document.getElementById('timer-bar');
+                    bar.style.transition = `width ${this.gameState.timerLeft/1000}s linear`;
+                    bar.style.width = '0%';
+                    this.gameState.timerStart = Date.now();
+                    this.gameState.timer = setTimeout(() => {
+                         this.checkAnswer(false, null, this.levels[this.state.currentLevel]);
+                    }, this.gameState.timerLeft);
+                } else {
+                    this.checkAnswer(false, null, this.levels[this.state.currentLevel]);
                 }
-                showScreen('gameOver');
-            }
+            },
 
-            function gcd(a, b) { return !b ? a : gcd(b, a % b); }
-            function lcm(a, b) { return (a * b) / gcd(a, b); }
+            updateHUD: function(config) {
+                document.getElementById('game-lives').innerText = '❤️'.repeat(this.gameState.lives);
+                document.getElementById('game-score').innerText = this.gameState.score * 100;
+                document.getElementById('question-counter').innerText = `${this.gameState.qIndex}/${config.count}`;
+            },
 
-            function generateQuestion(type, level) {
-                switch (type) {
-                    case 'Suma y Resta': return genBasic(level, true);
-                    case 'Multiplicación': return genBasic(level, false, true);
-                    case 'División': return genBasic(level, false, false, true);
-                    case 'Potencias': return genPower(level);
-                    case 'Potencias 2': return generatePowerPropertiesQuestion(level);
-                    case 'Raíces': return genRoot(level);
-                    case 'Logaritmos': return generateLogarithmQuestion(level);
-                    case 'Descomposición de Raíces': return generateRootDecompositionQuestion(level);
-                    case 'Mínimo Común Múltiplo': return generateLCMQuestion(level);
-                    case 'Descomposición de Factores': return generateDecompositionQuestion(level);
-                    case 'Amplificación': return generateAmplificationQuestion(level);
-                    case 'Simplificación (Divisor)': return generateSimplificationDivisorQuestion(level);
-                    case 'Simplificación (Resultado)': return generateSimplificationResultQuestion(level);
-                    case 'Factorización': return generateFactorizationQuestion(level);
-                    case 'Productos Notables': return generateNotableProductQuestion(level);
-                    case 'Identifica P. Notable': return genIdentifyPN(level);
-                    case 'Identifica Factorización': return genIdentifyFact(level);
+            endLevel: function(win) {
+                document.getElementById('modal-result').classList.remove('hidden');
+                document.getElementById('modal-result').style.display = 'flex';
+                const title = document.getElementById('res-title');
+                const starsDiv = document.getElementById('res-stars');
+                
+                if (win) {
+                    this.playTone('win');
+                    title.innerText = "¡NIVEL COMPLETADO!";
+                    title.className = "text-3xl title-font text-green-400 mb-2";
+                    document.getElementById('res-msg').innerText = "Has despejado la niebla.";
+                    starsDiv.innerText = "★".repeat(this.gameState.lives);
+                    
+                    if (this.gameState.lives > (this.state.stars[this.state.currentLevel] || 0)) {
+                        this.state.stars[this.state.currentLevel] = this.gameState.lives;
+                    }
+                    if (this.state.currentLevel === this.state.unlocked && this.state.unlocked < this.totalLevels) {
+                        this.state.unlocked++;
+                    }
+                    this.save();
+                } else {
+                    this.playTone('lose');
+                    title.innerText = "DERROTA";
+                    title.className = "text-3xl title-font text-red-500 mb-2";
+                    document.getElementById('res-msg').innerText = "Vuelve a intentarlo.";
+                    starsDiv.innerText = "💀";
                 }
-            }
+            },
 
-            function generateAmplificationQuestion(level) {
-                const num = Math.floor(Math.random() * 5) + 1;
-                const den = Math.floor(Math.random() * 5) + num + 1;
-                const mult = level <= 20 ? Math.floor(Math.random() * 4) + 2 : Math.floor(Math.random() * 7) + 6;
-                const question = formatFraction(num, den);
-                const correctAnswer = formatFraction(num*mult, den*mult);
-                const hint = 'Multiplica numerador y denominador por el mismo número';
-                let options = new Set([correctAnswer]);
-                options.add(formatFraction(num+mult, den+mult));
-                options.add(formatFraction(num*mult, den));
-                options.add(formatFraction(num, den*mult));
-                while(options.size < 4) {
-                    const fakeMult = mult + Math.floor(Math.random() * 3) + 1;
-                    options.add(formatFraction(num*fakeMult, den*fakeMult));
-                }
-                return { question, questionText: question, correctAnswer, questionKey: `amp-${num}/${den}`, answers: Array.from(options).slice(0, 4), hint };
-            }
+            save: function() { localStorage.setItem('naoCleanSave', JSON.stringify(this.state)); },
+            flash: function(id) { const el = document.getElementById(id); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 200); },
+            initAudio: async function() { try { await Tone.start(); this.synth = new Tone.Synth().toDestination(); this.audioCtx=true; } catch(e){} },
+            playTone: function(type) {
+                if(!this.synth) return;
+                try {
+                    if(type==='correct') this.synth.triggerAttackRelease("C5", "8n");
+                    if(type==='wrong') this.synth.triggerAttackRelease("G2", "4n");
+                    if(type==='win') { this.synth.triggerAttackRelease("C4", "8n"); this.synth.triggerAttackRelease("E4", "8n", "+0.1"); }
+                    if(type==='click') this.synth.triggerAttackRelease("A4", "16n");
+                } catch(e){}
+            },
 
-            function generateSimplificationDivisorQuestion(level) {
-                const primes = [2, 3, 5, 7];
-                const divisor = primes[Math.floor(Math.random() * primes.length)];
-                const numBase = Math.floor(Math.random() * 10) + 1;
-                const denBase = Math.floor(Math.random() * 10) + numBase + 1;
-                const num = numBase * divisor;
-                const den = denBase * divisor;
-                const question = `<span class="text-xl md:text-3xl font-normal">¿Por cuánto se puede simplificar</span> ${formatFraction(num, den)}<span class="text-xl md:text-3xl font-normal">?</span>`;
-                const correctAnswer = `${divisor}`;
-                const hint = 'Busca un número que divida a ambos';
-                let options = new Set([correctAnswer]);
-                let attempts = 0;
-                while(options.size < 4 && attempts < 20) {
-                    let fake = primes[Math.floor(Math.random() * primes.length)];
-                    if (fake !== divisor && (num % fake !== 0 || den % fake !== 0)) { options.add(`${fake}`); }
-                    attempts++;
-                }
-                while(options.size < 4) options.add(`${divisor + options.size + 1}`);
-                return { question, questionText: `¿Por cuánto se simplifica ${num}/${den}?`, correctAnswer, questionKey: `div-${num}/${den}`, answers: Array.from(options).slice(0, 4), hint };
+            generateMath: function(type, diff) {
+                const r = (n) => Math.floor(Math.random()*n)+1;
+                if(type === 'suma') { let a = r(5)+diff; let b = r(5)+diff; return { q: `${a} + ${b}`, a: a+b }; }
+                if(type === 'resta') { let a = r(5)+diff+5; let b = r(a-1); return { q: `${a} - ${b}`, a: a-b }; }
+                if(type === 'mult') { let a = r(5); let b = r(5)+diff; return { q: `${a} × ${b}`, a: a*b }; }
+                // Fallback para otros niveles en esta versión limpia
+                return { q: `${diff} + ${diff}`, a: diff*2 };
             }
+        };
 
-            function generateSimplificationResultQuestion(level) {
-                const divisor = Math.floor(Math.random() * 5) + 2;
-                const numSimp = Math.floor(Math.random() * 10) + 1;
-                const denSimp = Math.floor(Math.random() * 10) + numSimp + 1;
-                const common = gcd(numSimp, denSimp);
-                const n = numSimp / common;
-                const d = denSimp / common;
-                const num = n * divisor;
-                const den = d * divisor;
-                const question = `<span class="text-xl md:text-3xl font-normal">Simplifica</span> ${formatFraction(num, den)}`;
-                const correctAnswer = formatFraction(n, d);
-                const hint = 'Divide numerador y denominador por el mismo número';
-                let options = new Set([correctAnswer]);
-                options.add(formatFraction(d, n));
-                options.add(formatFraction(n*2, d));
-                options.add(formatFraction(n, d*2));
-                while(options.size < 4) {
-                    options.add(formatFraction(n + Math.floor(Math.random()*3)+1, d + Math.floor(Math.random()*3)+1));
-                }
-                return { question, questionText: `Simplifica ${num}/${den}`, correctAnswer, questionKey: `simp-${num}/${den}`, answers: Array.from(options).slice(0, 4), hint };
-            }
-
-            // --- Generadores Numéricos (Resto) ---
-            function genBasic(lvl, isSum, isMul, isDiv) {
-                let diff = Math.ceil(lvl / 1.5);
-                let a = Math.floor(Math.random() * diff * 10) + diff * 2;
-                let b = Math.floor(Math.random() * diff * 10) + diff * 2;
-                if (isSum) { let q = Math.random()>0.5 ? `${a}+${b}`:`${a}-${b}`; return { question: q, questionText: q, correctAnswer: eval(q), answers: [], hint: 'Operación básica' }; }
-                if (isMul) { a = Math.floor(Math.random()*(diff/2+2))+2; b = Math.floor(Math.random()*15)+Math.ceil(lvl/2.5); return { question: `${a}×${b}`, questionText: `${a}*${b}`, correctAnswer: a*b, answers: [], hint: 'Multiplicación' }; }
-                if (isDiv) { let d = Math.floor(Math.random()*12)+Math.ceil(lvl/3); let q = Math.floor(Math.random()*(diff+2))+2; return { question: `${d*q}÷${d}`, questionText: `${d*q}/${d}`, correctAnswer: q, answers: [], hint: 'División' }; }
-            }
-            function genPower(lvl) { let b = Math.floor(Math.random()*Math.min(lvl/2, 15))+2; let e = Math.floor(Math.random()*2)+2+Math.floor(lvl/15); return { question: `${b}<sup>${e}</sup>`, questionText: `${b}^${e}`, correctAnswer: Math.pow(b,e), answers: [], hint: 'Potencia básica' }; }
-            function genRoot(lvl) { let b = Math.floor(Math.random()*(Math.ceil(lvl/1.5)+5))+3; return { question: `√${b*b}`, questionText: `sqrt(${b*b})`, correctAnswer: b, answers: [], hint: 'Raíz exacta' }; }
-            
-            function generatePowerPropertiesQuestion(level) {
-                const type = Math.floor(Math.random() * 7);
-                let base = Math.floor(Math.random() * 4) + 2; let exp1 = Math.floor(Math.random() * 4) + 2; let exp2 = Math.floor(Math.random() * 4) + 2;
-                let question = '', correctAnswer = '', hint = ''; let options = new Set();
-                switch(type) {
-                    case 0: question = `${base}<sup>${exp1}</sup> × ${base}<sup>${exp2}</sup>`; correctAnswer = `${base}<sup>${exp1 + exp2}</sup>`; hint = 'a<sup>b</sup> × a<sup>c</sup> = a<sup>b+c</sup>'; options.add(correctAnswer); options.add(`${base}<sup>${exp1 * exp2}</sup>`); options.add(`${base*base}<sup>${exp1 + exp2}</sup>`); break;
-                    case 1: if (exp1 === exp2) exp1++; question = `${base}<sup>${exp1}</sup> ÷ ${base}<sup>${exp2}</sup>`; correctAnswer = `${base}<sup>${exp1 - exp2}</sup>`; hint = 'a<sup>b</sup> ÷ a<sup>c</sup> = a<sup>b-c</sup>'; options.add(correctAnswer); options.add(`${base}<sup>${exp1 + exp2}</sup>`); options.add(`1<sup>${exp1 - exp2}</sup>`); break;
-                    case 2: question = `(${base}<sup>${exp1}</sup>)<sup>${exp2}</sup>`; correctAnswer = `${base}<sup>${exp1 * exp2}</sup>`; hint = '(a<sup>b</sup>)<sup>c</sup> = a<sup>b×c</sup>'; options.add(correctAnswer); options.add(`${base}<sup>${exp1 + exp2}</sup>`); options.add(`${base}<sup>${Math.pow(exp1, exp2)}</sup>`); break;
-                    case 3: question = `${base}<sup>-${exp1}</sup>`; correctAnswer = `1 / ${base}<sup>${exp1}</sup>`; hint = 'a<sup>-b</sup> = 1 / a<sup>b</sup>'; options.add(correctAnswer); options.add(`-${base}<sup>${exp1}</sup>`); options.add(`${-base}<sup>${exp1}</sup>`); break;
-                    case 4: let base2 = Math.floor(Math.random() * 4) + 2; if (base === base2) base2++; question = `${base}<sup>${exp1}</sup> × ${base2}<sup>${exp1}</sup>`; correctAnswer = `(${base * base2})<sup>${exp1}</sup>`; hint = 'a<sup>c</sup> × b<sup>c</sup> = (a×b)<sup>c</sup>'; options.add(correctAnswer); options.add(`(${base + base2})<sup>${exp1}</sup>`); options.add(`(${base * base2})<sup>${exp1*2}</sup>`); break;
-                    case 5: question = `(-${base})<sup>${exp2}</sup>`; correctAnswer = `${exp2 % 2 === 0 ? '' : '-'}${Math.pow(base, exp2)}`; hint = '(-a)<sup>par</sup> = a, (-a)<sup>impar</sup> = -a'; options.add(correctAnswer); options.add(`${exp2 % 2 !== 0 ? '' : '-'}${Math.pow(base, exp2)}`); options.add(`-${base * exp2}`); break;
-                    case 6: question = `-${base}<sup>${exp2}</sup>`; correctAnswer = `-${Math.pow(base, exp2)}`; hint = '-a<sup>b</sup> = -(a<sup>b</sup>)'; options.add(correctAnswer); options.add(`${Math.pow(base, exp2)}`); options.add(`${base * exp2}`); break;
-                }
-                return { question, questionText: question, correctAnswer, questionKey: question, answers: Array.from(options).slice(0, 4), hint };
-            }
-
-            function generateLogarithmQuestion(level) {
-                let possibleBases = [];
-                if (level <= 20) { possibleBases = [ {b: 2, max: 12}, {b: 3, max: 8}, {b: 10, max: 5} ]; } 
-                else if (level <= 50) { possibleBases = [ {b: 2, max: 12}, {b: 3, max: 8}, {b: 10, max: 5}, {b: 4, max: 4}, {b: 5, max: 4}, {b: 6, max: 4}, {b: 7, max: 4} ]; } 
-                else { possibleBases = [ {b: 2, max: 12}, {b: 3, max: 8}, {b: 10, max: 5}, {b: 4, max: 4}, {b: 5, max: 4}, {b: 6, max: 4}, {b: 7, max: 4}, {b: 8, max: 3}, {b: 9, max: 3} ]; for(let i = 11; i <= 30; i++) { possibleBases.push({b: i, max: 2}); } }
-                const config = possibleBases[Math.floor(Math.random() * possibleBases.length)];
-                const base = config.b; const result = Math.floor(Math.random() * (config.max - 1)) + 2; const argument = Math.pow(base, result);
-                const question = `log<sub>${base}</sub>(${argument})`; const correctAnswer = `${result}`; const questionKey = `log${base}(${argument})`; const hint = 'log<sub>b</sub>(a) = c  ↔  b<sup>c</sup> = a';
-                return { question, questionText: questionKey, correctAnswer, questionKey, answers: [], hint };
-            }
-            
-            function generateRootDecompositionQuestion(level) {
-                const perfectSquares = [4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144]; const nonSquares = [2, 3, 5, 6, 7, 10, 11, 13, 14, 15];
-                const squareIndex = Math.floor(Math.random() * Math.min(perfectSquares.length, level/8 + 2)); const square = perfectSquares[squareIndex]; const nonSquare = nonSquares[Math.floor(Math.random() * nonSquares.length)];
-                const number = square * nonSquare; const question = `√${number}`; const correctAnswer = `${Math.sqrt(square)}√${nonSquare}`; const questionKey = `sqrt(${number})`;
-                let options = new Set([correctAnswer]); options.add(`${nonSquare}√${Math.sqrt(square)}`); options.add(`${Math.sqrt(square)}√${nonSquare+1}`); options.add(`${Math.sqrt(square)+1}√${nonSquare}`);
-                const hint = '√(a × b) = √a × √b';
-                return { question, questionText: questionKey, correctAnswer, questionKey, answers: Array.from(options).slice(0,4), hint };
-            }
-
-            function generateLCMQuestion(level) {
-                let count = 2; let maxVal = 12;
-                if (level > 15) { count = 3; maxVal = 10; } if (level > 30) { count = 4; maxVal = 8; }
-                let numbers = []; let result = 1; let attempts = 0;
-                do {
-                    numbers = []; while(numbers.length < count) { let n = Math.floor(Math.random() * (maxVal - 1)) + 2; if(!numbers.includes(n)) numbers.push(n); }
-                    result = numbers[0]; for(let i=1; i<numbers.length; i++) { result = lcm(result, numbers[i]); }
-                    attempts++;
-                } while (result > 150 && attempts < 10); 
-                const question = `MCM(${numbers.join(', ')})`;
-                let options = new Set([result]);
-                options.add(numbers.reduce((a,b)=>a*b, 1)); options.add(result + numbers[0]); if(result - numbers[0] > 0) options.add(result - numbers[0]); options.add(result * 2);
-                while(options.size < 4) { options.add(result + Math.floor(Math.random()*10) + 1); }
-                return { question: `MCM de ${numbers.join(', ')}`, questionText: `mcm(${numbers.join(',')})`, correctAnswer: result, questionKey: question, answers: Array.from(options).slice(0,4), hint: 'El menor número divisible por todos' };
-            }
-            function generateDecompositionQuestion(level) {
-                const hint = 'Encuentra los factores'; let numFactors = 2;
-                if (level > 20) numFactors = 3; if (level > 45) numFactors = 4;
-                let factors = []; for(let i=0; i<numFactors; i++) { factors.push(Math.floor(Math.random() * 8) + 2); }
-                const targetNumber = factors.reduce((a, b) => a * b, 1);
-                const correctAnswer = factors.join(' × ');
-                const question = `${targetNumber}`;
-                let options = new Set(); options.add(correctAnswer);
-                let attempts = 0;
-                while(options.size < 4 && attempts < 50) {
-                    attempts++; let fakeFactors = [...factors]; let idxToChange = Math.floor(Math.random() * numFactors);
-                    if (Math.random() > 0.5) { fakeFactors[idxToChange] = Math.max(2, fakeFactors[idxToChange] + (Math.random()>0.5 ? 1 : -1)); } else { fakeFactors[idxToChange] = Math.floor(Math.random() * 8) + 2; }
-                    const fakeProduct = fakeFactors.reduce((a,b) => a*b, 1);
-                    const fakeString = fakeFactors.join(' × ');
-                    if (fakeProduct !== targetNumber && !options.has(fakeString)) { options.add(fakeString); }
-                }
-                while(options.size < 4) { options.add(`${Math.floor(Math.random()*10+2)} × ${Math.floor(Math.random()*10+2)}`); }
-                return { question, questionText: question, correctAnswer, questionKey: question, answers: Array.from(options), hint };
-            }
-
-            // --- Generadores Álgebra (MODIFICADOS) ---
-            function generateNotableProductQuestion(level) {
-                let type; if (level <= 10) { type = Math.random() > 0.5 ? 0 : 3; } else if (level <= 25) { type = Math.floor(Math.random() * 4); } else { type = Math.floor(Math.random() * 4); }
-                let a = Math.floor(Math.random() * 5) + 1 + Math.floor(level/10); let b = Math.floor(Math.random() * 5) + 1 + Math.floor(level/10);
-                let question = '', correctAnswer = '', questionKey = '', hint = ''; let options = new Set();
-                if (level <= 25 && type !== 0) { a = 1; } if (level > 25 && a === 1) { a = 2; }
-                switch(type) {
-                    case 0: // Propiedad Distributiva (Antes Factor Común)
-                        let factor = Math.floor(Math.random() * 5) + 2 + Math.floor(level/10); let c = Math.floor(Math.random() * 5) + 1 + Math.floor(level/10); if (factor === c) c++;
-                        if(level <= 10) { question = `${factor}(x + ${c})`; correctAnswer = `${factor}x + ${factor*c}`;
-                        } else { if(Math.random() > 0.5) b *= -1; if(Math.random() > 0.5) c *= -1; question = `${factor}(x ${c >= 0 ? '+' : '-'} ${Math.abs(c)})`; correctAnswer = `${factor}x ${c*factor >= 0 ? '+' : '-'} ${Math.abs(c*factor)}`; }
-                        hint = 'a(x + y) = ax + ay'; options.add(correctAnswer); options.add(`${factor}x + ${c}`); options.add(`${factor+c}x`); options.add(`x + ${factor*c}`);
-                        break;
-                    case 1: // Cuadrado de Binomio
-                        const sign = (level <= 10 || Math.random() > 0.5) ? '+' : '-'; const x2_term_cb = a === 1 ? 'x<sup>2</sup>' : `${a*a}x<sup>2</sup>`; const ax_term_cb = a === 1 ? 'x' : `${a}x`;
-                        question = `(${ax_term_cb} ${sign} ${b})<sup>2</sup>`; correctAnswer = `${x2_term_cb} ${sign} ${2*a*b}x + ${b*b}`; hint = '(a ± b)² = a² ± 2ab + b²';
-                        options.add(correctAnswer); options.add(`${x2_term_cb} ${sign === '+' ? '-' : '+'} ${2*a*b}x + ${b*b}`); options.add(`${x2_term_cb} + ${b*b}`); options.add(`${x2_term_cb} ${sign} ${a*b}x + ${b*b}`);
-                        break;
-                    case 2: // Suma por Diferencia
-                        const x2_term_sd = a === 1 ? 'x<sup>2</sup>' : `${a*a}x<sup>2</sup>`; const ax_term_sd = a === 1 ? 'x' : `${a}x`;
-                        question = `(${ax_term_sd} + ${b})(${ax_term_sd} - ${b})`; correctAnswer = `${x2_term_sd} - ${b*b}`; hint = '(a+b)(a-b) = a² - b²';
-                        options.add(correctAnswer); options.add(`${x2_term_sd} + ${b*b}`); options.add(`${ax_term_sd} - ${b}`); options.add(`(${ax_term_sd} - ${b})<sup>2</sup>`);
-                        break;
-                    case 3: // Trinomio
-                        if (a === b) b++; if (level <= 10) { a = Math.abs(a); b = Math.abs(b); } else { if (Math.random() > 0.5) a *= -1; if (Math.random() > 0.5) b *= -1; }
-                        const aText = a > 0 ? `+ ${a}` : `- ${Math.abs(a)}`; const bText = b > 0 ? `+ ${b}` : `- ${Math.abs(b)}`; question = `(x ${aText})(x ${bText})`;
-                        const sum = a + b; const prod = a * b; const sumText = sum === 0 ? '' : (sum === 1 ? ' + x' : (sum === -1 ? ' - x' : (sum > 0 ? ` + ${sum}x` : ` - ${Math.abs(sum)}x`)));
-                        const prodText = prod === 0 ? '' : (prod > 0 ? ` + ${prod}` : ` - ${Math.abs(prod)}`); correctAnswer = `x<sup>2</sup>${sumText}${prodText}`; hint = '(x+a)(x+b) = x²+(a+b)x+ab';
-                        options.add(correctAnswer); options.add(`x<sup>2</sup>${sum > 0 ? ` - ${sum}x` : ` + ${Math.abs(sum)}x`}${prod > 0 ? ` + ${prod}` : ` - ${Math.abs(prod)}`}`); options.add(`x<sup>2</sup>${sumText}${prod > 0 ? ` - ${prod}` : ` + ${Math.abs(prod)}`}`); options.add(`x<sup>2</sup> + ${prod}x + ${sum}`);
-                        break;
-                }
-                questionKey = question; questionText = question.replace(/<sup>/g, '^').replace(/<\/sup>/g, ''); return { question, questionText, correctAnswer, questionKey, answers: Array.from(options).slice(0,4), hint };
-            }
-
-            function generateFactorizationQuestion(level) {
-                let type; if (level <= 10) { type = Math.random() > 0.5 ? 0 : 3; } else if (level <= 25) { type = Math.floor(Math.random() * 4); } else { type = Math.floor(Math.random() * 4); }
-                let a = Math.floor(Math.random() * 5) + 1 + Math.floor(level/10); let b = Math.floor(Math.random() * 5) + 1 + Math.floor(level/10);
-                let question = '', correctAnswer = '', questionKey = '', hint = ''; let options = new Set();
-                if (level <= 25 && type !== 0) { a = 1; } if (level > 25 && a === 1) { a = 2; }
-                switch(type) {
-                    case 0: // Factor Común
-                        let factor = Math.floor(Math.random() * 5) + 2 + Math.floor(level/10); let c = Math.floor(Math.random() * 5) + 1 + Math.floor(level/10); if (factor === c) c++;
-                        // Asegurar términos no semejantes dentro del paréntesis (uno con x, otro sin)
-                        if(level <= 10) { question = `${factor*b}x + ${factor*c}`; correctAnswer = `${factor}(${b}x + ${c})`;
-                        } else { if(Math.random() > 0.5) b *= -1; if(Math.random() > 0.5) c *= -1; const term1 = factor * b; const term2 = factor * c; question = `${term1}x ${term2 >= 0 ? '+' : '-'} ${Math.abs(term2)}`; correctAnswer = `${factor}(${b}x ${c >= 0 ? '+' : '-'} ${Math.abs(c)})`; }
-                        hint = 'abx + ac = a(bx+c)'; options.add(correctAnswer); options.add(`${b}(${factor}x + ${c})`); options.add(`${c}(${factor}x + ${b})`); options.add(`${factor}(${b}x - ${c})`); break;
-                    case 1: // Cuadrado de Binomio
-                        const sign = (level <= 10 || Math.random() > 0.5) ? '+' : '-'; const x2_term_cb = a === 1 ? 'x<sup>2</sup>' : `${a*a}x<sup>2</sup>`; const ax_term_cb = a === 1 ? 'x' : `${a}x`;
-                        question = `${x2_term_cb} ${sign} ${2*a*b}x + ${b*b}`; correctAnswer = `(${ax_term_cb} ${sign} ${b})<sup>2</sup>`; hint = 'a² ± 2ab + b² = (a ± b)²';
-                        options.add(correctAnswer); options.add(`(${ax_term_cb} ${sign === '+' ? '-' : '+'} ${b})<sup>2</sup>`); options.add(`(${b}x + ${a})<sup>2</sup>`); options.add(`(${ax_term_cb} ${sign} ${b})`); break;
-                    case 2: // Suma por Diferencia
-                        const x2_term_sd = a === 1 ? 'x<sup>2</sup>' : `${a*a}x<sup>2</sup>`; const ax_term_sd = a === 1 ? 'x' : `${a}x`;
-                        question = `${x2_term_sd} - ${b*b}`; correctAnswer = `(${ax_term_sd} + ${b})(${ax_term_sd} - ${b})`; hint = 'a² - b² = (a+b)(a-b)';
-                        options.add(correctAnswer); options.add(`(${ax_term_sd} - ${b})<sup>2</sup>`); options.add(`(${ax_term_sd} + ${b})<sup>2</sup>`); options.add(`(${ax_term_sd} + ${b*b})(${ax_term_sd} - 1)`); break;
-                    case 3: // Trinomio
-                        if (a === b) b++; if (level <= 10) { a = Math.abs(a); b = Math.abs(b); } else { if (Math.random() > 0.5) a *= -1; if (Math.random() > 0.5) b *= -1; }
-                        if (a > b) [a, b] = [b, a]; 
-                        const sum = a + b; const prod = a * b; const sumText = sum === 0 ? '' : (sum === 1 ? ' + x' : (sum === -1 ? ' - x' : (sum > 0 ? ` + ${sum}x` : ` - ${Math.abs(sum)}x`)));
-                        const prodText = prod === 0 ? '' : (prod > 0 ? ` + ${prod}` : ` - ${Math.abs(prod)}`); question = `x<sup>2</sup>${sumText}${prodText}`;
-                        const aText = a > 0 ? `+ ${a}` : `- ${Math.abs(a)}`; const bText = b > 0 ? `+ ${b}` : `- ${Math.abs(b)}`; correctAnswer = `(x ${aText})(x ${bText})`; hint = 'x²+(a+b)x+ab = (x+a)(x+b)';
-                        options.add(correctAnswer); options.add(`(x ${a > 0 ? '-' : '+'} ${Math.abs(a)})(x ${b > 0 ? '-' : '+'} ${Math.abs(b)})`); options.add(`(x ${a > 0 ? '-' : '+'} ${Math.abs(a)})(x ${b > 0 ? '+' : '-'} ${Math.abs(b)})`);
-                        if (Math.abs(a) === 1 || Math.abs(b) === 1) { options.add(`(x ${a > 0 ? '+' : '-'} ${Math.abs(a)+1})(x ${b > 0 ? '+' : '-'} ${Math.abs(b)})`); } else { options.add(`(x + ${prod})(x + 1)`); } break;
-                }
-                questionKey = question; questionText = question.replace(/<sup>/g, '^').replace(/<\/sup>/g, ''); return { question, questionText, correctAnswer, questionKey, answers: Array.from(options).slice(0,4), hint };
-            }
-
-            function genIdentifyPN(level) {
-                const types = [ { name: 'Propiedad Distributiva Simple', gen: () => `a(x+b)` }, { name: 'Cuadrado de Binomio', gen: () => `(x ${Math.random()>0.5?'+':'-'} a)<sup>2</sup>` }, { name: 'Suma por Diferencia', gen: () => `(x+a)(x-a)` }, { name: 'Producto con Término Común', gen: () => `(x+a)(x+b)` }, { name: 'Cubo de Binomio (Suma)', gen: () => `(x + a)<sup>3</sup>` }, { name: 'Cubo de Binomio (Resta)', gen: () => `(x - a)<sup>3</sup>` }, { name: 'Suma de Cubos', gen: () => `(x+a)(x<sup>2</sup>-ax+a<sup>2</sup>)` }, { name: 'Diferencia de Cubos', gen: () => `(x-a)(x<sup>2</sup>+ax+a<sup>2</sup>)` } ];
-                let targetIdx = Math.floor(Math.random() * types.length); if (level < 10 && targetIdx > 3) targetIdx = Math.floor(Math.random() * 4);
-                const target = types[targetIdx]; const a = Math.floor(Math.random() * 5) + 2; const b = Math.floor(Math.random() * 5) + 2;
-                let question = target.gen().replace(/x/g, 'x').replace(/a/g, a).replace(/b/g, b);
-                let options = [target.name]; while(options.length < 3) { let randomType = types[Math.floor(Math.random() * types.length)].name; if (!options.includes(randomType)) options.push(randomType); }
-                let hint = '';
-                if(target.name === 'Propiedad Distributiva Simple') hint = 'a(x+y) = ax+ay';
-                else if(target.name === 'Cuadrado de Binomio') hint = 'Un binomio elevado a 2';
-                else if(target.name === 'Suma por Diferencia') hint = 'Binomios iguales con signo distinto';
-                else if(target.name === 'Producto con Término Común') hint = 'Solo x se repite';
-                else if(target.name.includes('Cubo de Binomio')) hint = 'Un binomio elevado a 3';
-                else hint = 'Genera a³±b³';
-                return { question, questionText: question.replace(/<sup>/g,'^').replace(/<\/sup>/g,''), correctAnswer: target.name, answers: options, hint };
-            }
-
-            function genIdentifyFact(level) {
-                const types = [ { name: 'Factor Común', gen: (a,b) => `${a}x + ${a*b}` }, { name: 'Trinomio Cuadrado Perfecto', gen: (a) => `x<sup>2</sup> + ${2*a}x + ${a*a}` }, { name: 'Diferencia de Cuadrados', gen: (a) => `x<sup>2</sup> - ${a*a}` }, { name: 'Trinomio de la forma x²+px+q', gen: (a,b) => `x<sup>2</sup> + ${a+b}x + ${a*b}` }, { name: 'Cubo de Binomio (Suma)', gen: (a) => `x<sup>3</sup> + ${3*a}x<sup>2</sup> + ${3*a*a}x + ${a*a*a}` }, { name: 'Cubo de Binomio (Resta)', gen: (a) => `x<sup>3</sup> - ${3*a}x<sup>2</sup> + ${3*a*a}x - ${a*a*a}` }, { name: 'Suma de Cubos', gen: (a) => `x<sup>3</sup> + ${a*a*a}` }, { name: 'Diferencia de Cubos', gen: (a) => `x<sup>3</sup> - ${a*a*a}` } ];
-                let targetIdx = Math.floor(Math.random() * types.length); if (level < 10 && targetIdx > 3) targetIdx = Math.floor(Math.random() * 4);
-                const target = types[targetIdx]; let a = Math.floor(Math.random() * 4) + 2; let b = Math.floor(Math.random() * 4) + 2; if (a===b) b++;
-                let question = target.gen(a,b);
-                let options = [target.name]; while(options.length < 3) { let randomType = types[Math.floor(Math.random() * types.length)].name; if (!options.includes(randomType)) options.push(randomType); }
-                let hint = '';
-                if(target.name === 'Factor Común') hint = 'Busca un divisor común';
-                else if(target.name === 'Trinomio Cuadrado Perfecto') hint = 'Extremos cuadrados perfectos';
-                else if(target.name === 'Diferencia de Cuadrados') hint = 'Dos cuadrados restándose';
-                else if(target.name.includes('forma x²')) hint = 'Sumados dan p, multiplicados dan q';
-                else if(target.name.includes('Cubo de Binomio')) hint = 'Tiene 4 términos: 1, 3, 3, 1';
-                else hint = 'Dos términos al cubo';
-                return { question, questionText: question.replace(/<sup>/g,'^').replace(/<\/sup>/g,''), correctAnswer: target.name, answers: options, hint };
-            }
-
-            function generateOptions(correct) { let options = new Set([correct]); while (options.size < 4) { const offsetMagnitude = Math.max(1, Math.floor(Math.abs(correct) / 10) || 1); const offset = (Math.floor(Math.random() * 10) + 1) * (Math.random() > 0.5 ? 1 : -1) * offsetMagnitude; let wrongAnswer = correct + offset; if (wrongAnswer !== correct) { options.add(wrongAnswer); } } return Array.from(options); };
-            function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; };
-            function updateHUD() { scoreDisplay.textContent = state.score; const maxQuestions = state.currentCategory === 'Álgebra' ? MAX_QUESTIONS_ALGEBRA : MAX_QUESTIONS_NUMBERS; questionCounterDisplay.textContent = `${state.questionNumber}/${maxQuestions}`; livesContainer.innerHTML = ''; for (let i = 0; i < 3; i++) { const heartClass = i < state.lives ? 'text-red-500' : 'text-slate-600'; livesContainer.innerHTML += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24" fill="currentColor" class="w-8 h-8 ${heartClass}"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-1.344-.688 11.855 11.855 0 01-1.966-1.56c-1.11-1.04-1.966-2.174-2.634-3.433C6.68 14.08 6 12.86 6 11.693c0-1.05.37-2.09.986-2.914.615-.825 1.472-1.457 2.457-1.784a4.42 4.42 0 012.796.037c.99.345 1.853.973 2.534 1.784.68.81 1.035 1.86.986 2.914-.049 1.167-.68 2.388-1.354 3.642a11.855 11.855 0 01-1.966 1.56 15.247 15.247 0 01-1.344.688l-.022.012-.007.003z" /></svg>`; } };
-            
-            // Función corregida para evitar ReferenceError
-            function playFeedback(isCorrect) { 
-                if (audioInitialized) { 
-                    if (isCorrect) { correctSound.triggerAttackRelease("C5", "0.1"); } 
-                    else { incorrectSound.triggerAttackRelease("G2", "0.2"); } 
-                } 
-                // Usamos getElementById directamente
-                const overlay = isCorrect ? document.getElementById('feedback-correct') : document.getElementById('feedback-incorrect'); 
-                overlay.classList.add('show'); 
-                setTimeout(() => { overlay.classList.remove('show'); }, 150); 
-            };
-            
-            function showScores() { scoresList.innerHTML = ''; const sortedGames = GAME_MODES[state.currentCategory].filter(g => g !== 'Puntajes' && state.highScores[g]); if (sortedGames.length === 0) { scoresList.innerHTML = '<p class="text-slate-400 text-center">Aún no tienes récords. ¡A jugar!</p>'; } else { sortedGames.forEach(game => { scoresList.innerHTML += `<div class="flex justify-between items-center bg-slate-700 p-3 rounded-lg"><span class="font-semibold">${game}</span><span class="font-bold text-blue-400">${state.highScores[game]}</span></div>`; }); } showScreen('scores'); };
-
-            init();
-        });
+        window.onload = () => app.init();
     </script>
 </body>
 </html>
