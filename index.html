@@ -2,460 +2,195 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>La Leyenda de la Princesa de las Matemáticas 👑</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f0f1a"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraction Reactor: Sum & Rest 🌀</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
-    
     <style>
-        :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --neon-green: #0aff00; --bg-dark: #0f0f1a; }
-        body { font-family: 'Share Tech Mono', monospace; background-color: var(--bg-dark); color: #fff; touch-action: manipulation; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
-        
-        /* UI General */
-        .title-font { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
-        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100vh; height: calc(var(--vh, 1vh) * 100); position: absolute; top: 0; left: 0; z-index: 10; overflow-y: hidden; }
-        .screen.active { display: flex; }
-        
-        .neon-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--neon-blue); color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); transition: all 0.1s; cursor: pointer; }
-        .neon-btn:active { transform: scale(0.95); background: var(--neon-blue); color: #000; }
-
-        /* --- MAPA ZELDA --- */
-        #world-map-container {
-            width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; position: relative; background-color: #1e272e;
-            background: radial-gradient(circle at 50% 50%, #2d3436 0%, #000000 100%);
-            /* background-image: url('mapa_mundo.jpg'); background-size: cover; background-position: center bottom; */
+        :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --neon-green: #0aff00; --bg-dark: #0a0a12; }
+        body { 
+            font-family: 'Share Tech Mono', monospace; 
+            background-color: var(--bg-dark); 
+            color: #fff; 
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-        .map-path { display: flex; flex-direction: column-reverse; align-items: center; padding: 150px 0 100px 0; min-height: 100%; width: 100%; position: relative; }
-        .level-node {
-            position: absolute; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 24px; border: 3px solid #555; background: #2d3436; color: #555;
-            transition: transform 0.2s; z-index: 5; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        .title-font { font-family: 'Orbitron', sans-serif; }
+        .glass-panel { 
+            background: rgba(20, 20, 35, 0.8); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
         }
-        .level-node.unlocked { background: #000; border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 15px var(--neon-green); cursor: pointer; transform: scale(1.1); }
+        .neon-text-blue { text-shadow: 0 0 10px var(--neon-blue); color: var(--neon-blue); }
+        .neon-text-pink { text-shadow: 0 0 10px var(--neon-pink); color: var(--neon-pink); }
         
-        .avatar-marker {
-            position: absolute; top: -60px; left: 50%; transform: translateX(-50%); width: 60px; height: 60px;
-            background-image: url('icono.png'); background-size: cover; border-radius: 50%; border: 2px solid white;
-            box-shadow: 0 0 20px var(--neon-blue); animation: bounce 1.5s infinite; z-index: 10; pointer-events: none;
+        /* Estilo de los Sliders */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #333; border-radius: 2px;
+            border: 1px solid var(--neon-blue);
         }
-        @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10px); } }
+        input[type=range]::-webkit-slider-thumb {
+            height: 18px; width: 18px; border-radius: 50%; background: var(--neon-blue);
+            cursor: pointer; -webkit-appearance: none; margin-top: -8px;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
 
-        /* Intro Screen */
-        .epic-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0f0f1a 100%); z-index: 0; pointer-events: none; }
-        .nebula { position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background-image: radial-gradient(circle at 50% 50%, rgba(76, 29, 149, 0.3), transparent 60%), radial-gradient(circle at 20% 80%, rgba(0, 243, 255, 0.15), transparent 40%); animation: nebulaMove 30s infinite linear; filter: blur(30px); }
-        .stars { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(white 1px, transparent 1px); background-size: 50px 50px; opacity: 0.3; }
-        @keyframes nebulaMove { 0% { transform: rotate(0deg) scale(1); } 100% { transform: rotate(360deg) scale(1); } }
-        #screen-intro { justify-content: flex-start; padding-top: 15vh; }
-
-        /* Game Screen */
-        .glass-panel { background: rgba(20, 20, 35, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px 0 rgba(0,0,0,0.5); }
-        .answer-grid-btn { transition: transform 0.1s; }
-        .answer-grid-btn:active { transform: scale(0.95); }
-        .btn-correct { background-color: var(--neon-green) !important; color: black !important; }
-        .btn-wrong { background-color: #ef4444 !important; }
-        
-        .feedback-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.1s ease-in-out; }
-        .feedback-overlay.show { opacity: 0.7; }
-        .timer-bar-inner { transition: width 5s linear; height: 100%; background: linear-gradient(90deg, var(--neon-blue) 0%, var(--neon-pink) 100%); }
+        /* Representación de Fracción */
+        .fraction-bar {
+            height: 40px; border: 2px solid #333; display: flex; border-radius: 5px; overflow: hidden;
+            background: #111; position: relative;
+        }
+        .segment { border-right: 1px solid rgba(255,255,255,0.1); height: 100%; transition: all 0.3s; }
+        .segment.active { background: linear-gradient(90deg, var(--neon-blue), #0088ff); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .segment.active-pink { background: linear-gradient(90deg, var(--neon-pink), #ff0088); }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
-    <div class="epic-bg"><div class="nebula"></div><div class="stars"></div></div>
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl title-font font-black neon-text-blue mb-2 italic">FRACTION REACTOR</h1>
+            <p class="text-gray-400 tracking-widest text-xs uppercase">> Módulo de Análisis Geométrico v1.0</p>
+        </header>
 
-    <!-- 1. INTRO -->
-    <section id="screen-intro" class="screen active p-8 text-center bg-transparent z-20">
-        <h1 class="text-4xl md:text-5xl mb-8 title-font text-white font-black tracking-widest drop-shadow-lg leading-tight text-shadow">
-            LA LEYENDA DE LA<br><span style="color:var(--neon-pink)">PRINCESA</span> DE LAS<br><span style="color:var(--neon-blue)">MATEMÁTICAS</span>
-        </h1>
-        
-        <div class="glass-panel p-4 rounded-xl mb-6 text-left text-sm border-l-4 border-cyan-400 w-full max-w-sm mx-auto">
-            <p class="text-cyan-300 font-bold mb-1">> SISTEMA REINICIADO</p>
-            <p class="text-gray-300">Bienvenida, Guerrera.</p>
-        </div>
-
-        <input id="inp-name" type="text" placeholder="TU NOMBRE" class="w-full max-w-sm bg-black/60 text-white p-4 mb-4 text-center text-xl font-bold border-2 border-cyan-500 rounded-lg outline-none uppercase placeholder-gray-500 focus:shadow-[0_0_15px_#00f3ff] transition-shadow">
-        
-        <button id="btn-start" class="neon-btn w-full max-w-sm py-4 rounded-lg text-xl title-font font-black tracking-widest hover:scale-105 transition-transform">INGRESAR</button>
-
-        <footer class="mt-auto pb-8 flex flex-row items-center justify-center gap-6 w-full">
-            <a href="https://www.instagram.com/la_transformada_de_Naomi" target="_blank" class="flex items-center gap-2 text-pink-400 font-bold text-xs bg-black/50 px-4 py-2 rounded-full border border-pink-500/30">
-                <span>📸</span> @la_transformada_de_Naomi
-            </a>
-            <a href="https://www.tiktok.com/@la_transformada_de_naomi" target="_blank" class="flex items-center gap-2 text-cyan-400 font-bold text-xs bg-black/50 px-4 py-2 rounded-full border border-cyan-500/30">
-                <span>🎵</span> @la_transformada_de_naomi
-            </a>
-        </footer>
-    </section>
-
-    <!-- 2. MAPA -->
-    <section id="screen-map" class="screen bg-transparent">
-        <div class="absolute top-0 w-full bg-black/90 p-3 z-30 border-b border-white/10 flex justify-between items-center shadow-lg">
-            <div class="flex items-center gap-2">
-                <div class="w-10 h-10 rounded-full bg-slate-700 border border-white overflow-hidden">
-                    <img src="icono.png" class="w-full h-full object-cover">
-                </div>
-                <div class="flex flex-col text-left">
-                    <span id="ui-player-name" class="title-font text-cyan-400 text-sm leading-none"></span>
-                    <span class="text-xs text-gray-400">Nivel <span id="ui-level-num">1</span></span>
-                </div>
-            </div>
-            <div class="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-full border border-yellow-500/30">
-                <span class="text-yellow-400">⭐</span>
-                <span id="ui-total-stars" class="font-bold text-yellow-100">0</span>
-            </div>
-        </div>
-
-        <div id="world-map-container">
-            <div id="map-nodes-layer" class="relative w-full h-[1500px]"></div>
-        </div>
-
-        <div class="absolute bottom-4 left-4 z-30">
-             <button id="btn-logout" class="bg-red-900/80 text-red-200 text-xs px-3 py-2 rounded border border-red-500 shadow-lg">SALIR</button>
-        </div>
-    </section>
-
-    <!-- 3. JUEGO -->
-    <section id="screen-game" class="screen bg-slate-900/95 z-40">
-        <div class="w-full max-w-lg flex flex-col h-full justify-between p-4 pb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            <!-- HUD MEJORADO: SCORE + COUNTER -->
-            <header class="flex justify-between items-end w-full mb-4 pt-2 border-b border-white/10 pb-2">
-                <div class="flex flex-col">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase">Vidas</span>
-                    <div id="game-lives" class="text-xl">❤️❤️❤️</div>
-                </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="title-font text-sm text-cyan-400 mb-6 flex items-center gap-2">
+                    <span class="animate-pulse">●</span> ENTRADA DE DATOS
+                </h3>
                 
-                <div class="flex flex-col items-center">
-                     <span class="text-[10px] text-cyan-400 font-bold uppercase">Puntos</span>
-                     <span id="game-score" class="text-2xl font-black text-white title-font">0</span>
+                <div class="mb-8 p-4 bg-black/40 rounded-lg border-l-4 border-cyan-500">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-xs">FRACCIÓN A</span>
+                        <span id="label-f1" class="neon-text-blue font-bold text-xl">1 / 2</span>
+                    </div>
+                    <label class="text-[10px] text-gray-500 uppercase italic">Numerador</label>
+                    <input type="range" id="n1" min="1" max="10" value="1" class="w-full mb-4">
+                    <label class="text-[10px] text-gray-500 uppercase italic">Denominador</label>
+                    <input type="range" id="d1" min="1" max="12" value="2" class="w-full">
                 </div>
 
-                <div class="flex flex-col items-end">
-                    <button id="btn-game-exit" class="text-xs text-red-400 hover:text-white font-bold border border-red-500/50 rounded px-2 py-1 mb-1">MAPA</button>
-                    <span class="text-[10px] text-slate-400 font-bold uppercase">Meta</span>
-                    <span id="question-counter" class="text-xl font-bold text-white">1/5</span>
+                <div class="flex justify-center mb-8">
+                    <button id="op-btn" class="glass-panel px-6 py-2 rounded-full border-pink-500 text-pink-500 font-bold hover:bg-pink-500/20 transition-all">
+                        MODO: <span id="op-type">SUMA (+)</span>
+                    </button>
                 </div>
-            </header>
-            
-            <div class="w-full bg-slate-800 h-3 rounded-full mb-6 overflow-hidden border border-slate-600 relative">
-                <div id="timer-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-600 w-full transition-all duration-1000 ease-linear"></div>
+
+                <div class="p-4 bg-black/40 rounded-lg border-l-4 border-pink-500">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-xs">FRACCIÓN B</span>
+                        <span id="label-f2" class="neon-text-pink font-bold text-xl">1 / 3</span>
+                    </div>
+                    <label class="text-[10px] text-gray-500 uppercase italic">Numerador</label>
+                    <input type="range" id="n2" min="1" max="10" value="1" class="w-full mb-4">
+                    <label class="text-[10px] text-gray-500 uppercase italic">Denominador</label>
+                    <input type="range" id="d2" min="1" max="12" value="3" class="w-full">
+                </div>
             </div>
 
-            <div class="flex-grow flex flex-col items-center justify-center text-center px-4 relative w-full">
-                <div class="glass-panel w-full p-8 rounded-2xl border border-cyan-500/50 text-center relative">
-                    <h2 id="game-level-title" class="text-xs text-cyan-300 uppercase tracking-widest mb-2 font-bold">NIVEL 1</h2>
-                    <h2 id="game-question" class="text-5xl font-bold mb-4 text-white drop-shadow-md"></h2>
-                    <button id="btn-hint" class="absolute -top-4 -right-4 bg-yellow-400 text-black w-10 h-10 rounded-full font-bold border-2 border-white shadow-lg animate-bounce text-xl flex items-center justify-center">?</button>
+            <div class="glass-panel p-6 rounded-2xl flex flex-col justify-between">
+                <div>
+                    <h3 class="title-font text-sm text-pink-400 mb-6 flex items-center gap-2">
+                        <span class="animate-pulse">●</span> REPRESENTACIÓN GEOMÉTRICA
+                    </h3>
+
+                    <div class="mb-6">
+                        <p class="text-[10px] text-gray-500 mb-1">UNIDAD A</p>
+                        <div id="vis-f1" class="fraction-bar"></div>
+                    </div>
+
+                    <div class="mb-6">
+                        <p class="text-[10px] text-gray-500 mb-1">UNIDAD B</p>
+                        <div id="vis-f2" class="fraction-bar"></div>
+                    </div>
+
+                    <div id="comparator" class="text-center p-3 rounded border border-dashed border-gray-700 mb-6">
+                        <span class="text-xs uppercase block mb-1">Estado de Denominadores</span>
+                        <div id="comp-result" class="font-bold text-lg">DIFERENTES ≠</div>
+                    </div>
                 </div>
-            </div>
 
-            <div id="game-options" class="grid grid-cols-2 gap-4 mt-6"></div>
-            
-            <button id="btn-abandon" class="mt-auto text-slate-500 text-sm uppercase tracking-widest pb-4 hover:text-white transition-colors">Abandonar Misión</button>
-        </div>
-    </section>
-
-    <!-- MODAL FIN -->
-    <div id="modal-result" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-6">
-        <div class="bg-slate-800 border-2 border-white p-8 rounded-2xl text-center w-full max-w-sm">
-            <h1 id="res-title" class="text-3xl title-font mb-4"></h1>
-            <div id="res-stars" class="text-5xl mb-6 text-yellow-400"></div>
-            <p id="res-msg" class="text-gray-300 mb-8 font-bold"></p>
-            <div class="flex gap-3">
-                <button id="btn-retry" class="flex-1 bg-cyan-600 text-white font-bold py-3 rounded hover:bg-cyan-500">REINTENTAR</button>
-                <button id="btn-map-return" class="flex-1 bg-slate-600 text-white font-bold py-3 rounded hover:bg-slate-500">MAPA</button>
+                <div class="bg-cyan-500/10 p-4 rounded-xl border border-cyan-500/30">
+                    <p class="text-center text-[10px] text-cyan-500 font-bold mb-2 tracking-widest uppercase">Resultado Estimado</p>
+                    <div id="final-res" class="text-3xl text-center title-font font-bold">5 / 6</div>
+                    <div id="vis-res" class="fraction-bar mt-4 border-cyan-400 shadow-[0_0_15px_rgba(0,243,255,0.3)]"></div>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- MODAL PISTA -->
-    <div id="modal-hint" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-6">
-        <div class="bg-slate-900 border-2 border-yellow-500 p-6 rounded-2xl w-full max-w-sm text-center">
-            <h3 class="text-yellow-400 font-bold text-xl mb-4 title-font">PISTA</h3>
-            <p id="hint-content" class="text-xl text-white mb-6"></p>
-            <button id="btn-close-hint" class="w-full bg-yellow-600 text-black font-bold py-3 rounded">ENTENDIDO</button>
-        </div>
-    </div>
-
-    <div id="fb-ok" class="feedback-overlay bg-green-500/80 backdrop-blur"></div>
-    <div id="fb-err" class="feedback-overlay bg-red-500/80 backdrop-blur"></div>
 
     <script>
-        function setVh() {
-            let vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        }
-        window.addEventListener('resize', setVh);
-        setVh();
+        const state = { n1: 1, d1: 2, n2: 1, d2: 3, mode: 'sum' };
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                if (!window.location.protocol.includes('blob')) {
-                    navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
-                }
-            });
-        }
+        function update() {
+            // Obtener valores
+            state.n1 = parseInt(document.getElementById('n1').value);
+            state.d1 = parseInt(document.getElementById('d1').value);
+            state.n2 = parseInt(document.getElementById('n2').value);
+            state.d2 = parseInt(document.getElementById('d2').value);
 
-        // --- DATOS DE NIVELES ---
-        const MAP_POSITIONS = [
-            { l: 50, b: 5 }, { l: 30, b: 12 }, { l: 20, b: 20 }, { l: 40, b: 28 }, { l: 70, b: 35 },
-            { l: 80, b: 45 }, { l: 60, b: 55 }, { l: 30, b: 65 }, { l: 50, b: 75 }, { l: 50, b: 85 }
-        ];
+            // Actualizar etiquetas
+            document.getElementById('label-f1').innerText = `${state.n1} / ${state.d1}`;
+            document.getElementById('label-f2').innerText = `${state.n2} / ${state.d2}`;
 
-        const LEVELS = {
-            1: { title: "Suma Inicial", type: 'suma', count: 5, time: 20, hint: "Agrupa." },
-            // ... (Otros niveles se irán agregando aquí)
-        };
+            // Dibujar barras
+            drawBar('vis-f1', state.n1, state.d1, 'active');
+            drawBar('vis-f2', state.n2, state.d2, 'active-pink');
 
-        const app = {
-            state: { name: "", unlocked: 1, stars: {}, currentLevel: 1 },
-            gameState: { score: 0, lives: 3, qIndex: 0, timer: null, qData: null },
-            audioCtx: false, synth: null,
-            totalLevels: 10,
-
-            init: function() {
-                const save = localStorage.getItem('naoCleanSave');
-                if (save) this.state = { ...this.state, ...JSON.parse(save) };
-
-                // Event Listeners Seguros
-                document.getElementById('btn-start').onclick = () => this.login();
-                document.getElementById('btn-logout').onclick = () => { localStorage.removeItem('naoCleanSave'); location.reload(); };
-                
-                document.getElementById('btn-game-exit').onclick = () => this.showMap();
-                document.getElementById('btn-abandon').onclick = () => this.showMap();
-                document.getElementById('btn-hint').onclick = () => this.showHint();
-                document.getElementById('btn-close-hint').onclick = () => this.resumeGame();
-                
-                document.getElementById('btn-retry').onclick = () => this.playLevel(this.state.currentLevel);
-                document.getElementById('btn-map-return').onclick = () => this.showMap();
-
-                if (this.state.name) this.showMap();
-                else this.showScreen('screen-intro');
-            },
-
-            login: async function() {
-                const name = document.getElementById('inp-name').value.trim();
-                if (name) {
-                    await this.initAudio();
-                    this.state.name = name;
-                    this.save();
-                    this.showMap();
-                }
-            },
-
-            showScreen: function(id) {
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById(id).classList.add('active');
-                document.getElementById('modal-result').classList.add('hidden');
-                document.getElementById('modal-hint').classList.add('hidden');
-            },
-
-            showMap: function() {
-                this.showScreen('screen-map');
-                document.getElementById('ui-player-name').innerText = this.state.name;
-                
-                let total = 0; Object.values(this.state.stars).forEach(s => total += s);
-                document.getElementById('ui-total-stars').innerText = total;
-
-                const layer = document.getElementById('map-nodes-layer');
-                layer.innerHTML = '';
-
-                for (let i = 1; i <= this.totalLevels; i++) {
-                    const pos = MAP_POSITIONS[i-1];
-                    const unlocked = i <= this.state.unlocked;
-                    const stars = this.state.stars[i] || 0;
-                    
-                    const btn = document.createElement('div');
-                    btn.className = `level-node absolute transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center border-4 font-bold cursor-pointer transition-all duration-200 shadow-lg ${unlocked ? 'bg-black border-green-400 text-green-400 hover:scale-110' : 'bg-gray-700 border-gray-500 text-gray-500 grayscale'}`;
-                    btn.style.left = pos.l + '%'; btn.style.bottom = pos.b + '%';
-                    btn.style.width = '70px'; btn.style.height = '70px'; btn.style.borderRadius = '50%';
-                    btn.innerHTML = i;
-
-                    if (i === this.state.unlocked) {
-                        const avatar = document.createElement('div');
-                        avatar.className = "absolute -top-12 left-1/2 -translate-x-1/2 w-12 h-12 bg-white rounded-full border-2 border-blue-400 z-20 shadow-[0_0_15px_#00f3ff] animate-bounce";
-                        avatar.style.backgroundImage = "url('icono.png')";
-                        avatar.style.backgroundSize = "cover";
-                        btn.appendChild(avatar);
-                        setTimeout(() => btn.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
-                    }
-
-                    if (unlocked) {
-                        btn.onclick = () => { this.playTone('click'); this.playLevel(i); };
-                        if (stars > 0) {
-                            const sDiv = document.createElement('div');
-                            sDiv.className = "absolute -bottom-6 text-yellow-400 text-xs";
-                            sDiv.innerText = "★".repeat(stars);
-                            btn.appendChild(sDiv);
-                        }
-                    }
-                    layer.appendChild(btn);
-                }
-            },
-
-            playLevel: function(id) {
-                this.state.currentLevel = id;
-                const config = this.levels[id];
-                if (config) {
-                    this.startQuiz(config);
-                } else {
-                    alert("Nivel en construcción.");
-                }
-            },
-
-            startQuiz: function(config) {
-                this.gameState = { score: 0, lives: 3, qIndex: 0 };
-                this.showScreen('screen-game');
-                this.nextQuestion(config);
-            },
-
-            nextQuestion: function(config) {
-                if (this.gameState.qIndex >= config.count) {
-                    this.endLevel(true);
-                    return;
-                }
-                this.gameState.qIndex++;
-                this.updateHUD(config);
-
-                const q = this.generateMath(config.type, this.gameState.qIndex);
-                this.gameState.qData = q;
-                document.getElementById('game-question').innerText = q.q;
-
-                const grid = document.getElementById('game-options');
-                grid.innerHTML = '';
-                
-                let opts = new Set([q.a]);
-                while(opts.size < 4) opts.add(q.a + (Math.floor(Math.random()*10)-5) || q.a+1);
-                
-                Array.from(opts).sort(()=>Math.random()-0.5).forEach(opt => {
-                    const btn = document.createElement('button');
-                    btn.className = "bg-slate-700/80 border-b-4 border-slate-900 text-white font-bold py-6 rounded-xl text-xl active:border-b-0 active:translate-y-1 transition-all";
-                    btn.innerText = opt;
-                    btn.onclick = (e) => this.checkAnswer(opt === q.a, e.target, config);
-                    grid.appendChild(btn);
-                });
-                
-                this.startTimer(config.time, config);
-            },
-
-            checkAnswer: function(isCorrect, btn, config) {
-                clearInterval(this.gameState.timer);
-                if (isCorrect) {
-                    if(btn) { btn.classList.remove('bg-slate-700/80'); btn.classList.add('bg-green-500', 'border-green-700'); }
-                    this.gameState.score++;
-                    this.playTone('correct');
-                    this.flash('fb-ok');
-                    setTimeout(() => this.nextQuestion(config), 500);
-                } else {
-                    if(btn) { btn.classList.remove('bg-slate-700/80'); btn.classList.add('bg-red-500', 'border-red-700'); }
-                    this.gameState.lives--;
-                    this.playTone('wrong');
-                    this.flash('fb-err');
-                    if (this.gameState.lives <= 0) setTimeout(() => this.endLevel(false), 500);
-                    else setTimeout(() => this.nextQuestion(config), 500);
-                }
-                this.updateHUD(config);
-            },
-
-            startTimer: function(sec, config) {
-                clearInterval(this.gameState.timer);
-                const bar = document.getElementById('timer-bar');
-                bar.style.transition = 'none'; bar.style.width = '100%'; void bar.offsetWidth;
-                bar.style.transition = `width ${sec}s linear`; bar.style.width = '0%';
-                this.gameState.timerStart = Date.now();
-                this.gameState.timerLeft = sec * 1000;
-                this.gameState.timer = setTimeout(() => this.checkAnswer(false, null, config), sec * 1000);
-            },
-
-            showHint: function() {
-                clearInterval(this.gameState.timer);
-                const elapsed = Date.now() - this.gameState.timerStart;
-                this.gameState.timerLeft -= elapsed;
-                const bar = document.getElementById('timer-bar');
-                bar.style.transition = 'none';
-                bar.style.width = window.getComputedStyle(bar).width;
-                document.getElementById('hint-content').innerText = this.levels[this.state.currentLevel].hint;
-                document.getElementById('modal-hint').classList.remove('hidden');
-            },
-
-            resumeGame: function() {
-                document.getElementById('modal-hint').classList.add('hidden');
-                if (this.gameState.timerLeft > 0) {
-                    const bar = document.getElementById('timer-bar');
-                    bar.style.transition = `width ${this.gameState.timerLeft/1000}s linear`;
-                    bar.style.width = '0%';
-                    this.gameState.timerStart = Date.now();
-                    this.gameState.timer = setTimeout(() => {
-                         this.checkAnswer(false, null, this.levels[this.state.currentLevel]);
-                    }, this.gameState.timerLeft);
-                } else {
-                    this.checkAnswer(false, null, this.levels[this.state.currentLevel]);
-                }
-            },
-
-            updateHUD: function(config) {
-                document.getElementById('game-lives').innerText = '❤️'.repeat(this.gameState.lives);
-                document.getElementById('game-score').innerText = this.gameState.score * 100;
-                document.getElementById('question-counter').innerText = `${this.gameState.qIndex}/${config.count}`;
-            },
-
-            endLevel: function(win) {
-                document.getElementById('modal-result').classList.remove('hidden');
-                document.getElementById('modal-result').style.display = 'flex';
-                const title = document.getElementById('res-title');
-                const starsDiv = document.getElementById('res-stars');
-                
-                if (win) {
-                    this.playTone('win');
-                    title.innerText = "¡NIVEL COMPLETADO!";
-                    title.className = "text-3xl title-font text-green-400 mb-2";
-                    document.getElementById('res-msg').innerText = "Has despejado la niebla.";
-                    starsDiv.innerText = "★".repeat(this.gameState.lives);
-                    
-                    if (this.gameState.lives > (this.state.stars[this.state.currentLevel] || 0)) {
-                        this.state.stars[this.state.currentLevel] = this.gameState.lives;
-                    }
-                    if (this.state.currentLevel === this.state.unlocked && this.state.unlocked < this.totalLevels) {
-                        this.state.unlocked++;
-                    }
-                    this.save();
-                } else {
-                    this.playTone('lose');
-                    title.innerText = "DERROTA";
-                    title.className = "text-3xl title-font text-red-500 mb-2";
-                    document.getElementById('res-msg').innerText = "Vuelve a intentarlo.";
-                    starsDiv.innerText = "💀";
-                }
-            },
-
-            save: function() { localStorage.setItem('naoCleanSave', JSON.stringify(this.state)); },
-            flash: function(id) { const el = document.getElementById(id); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 200); },
-            initAudio: async function() { try { await Tone.start(); this.synth = new Tone.Synth().toDestination(); this.audioCtx=true; } catch(e){} },
-            playTone: function(type) {
-                if(!this.synth) return;
-                try {
-                    if(type==='correct') this.synth.triggerAttackRelease("C5", "8n");
-                    if(type==='wrong') this.synth.triggerAttackRelease("G2", "4n");
-                    if(type==='win') { this.synth.triggerAttackRelease("C4", "8n"); this.synth.triggerAttackRelease("E4", "8n", "+0.1"); }
-                    if(type==='click') this.synth.triggerAttackRelease("A4", "16n");
-                } catch(e){}
-            },
-
-            generateMath: function(type, diff) {
-                const r = (n) => Math.floor(Math.random()*n)+1;
-                if(type === 'suma') { let a = r(5)+diff; let b = r(5)+diff; return { q: `${a} + ${b}`, a: a+b }; }
-                if(type === 'resta') { let a = r(5)+diff+5; let b = r(a-1); return { q: `${a} - ${b}`, a: a-b }; }
-                if(type === 'mult') { let a = r(5); let b = r(5)+diff; return { q: `${a} × ${b}`, a: a*b }; }
-                // Fallback para otros niveles en esta versión limpia
-                return { q: `${diff} + ${diff}`, a: diff*2 };
+            // Comparador
+            const comp = document.getElementById('comp-result');
+            if (state.d1 === state.d2) {
+                comp.innerText = "TAMAÑOS IGUALES =";
+                comp.className = "font-bold text-lg text-green-400 animate-bounce";
+            } else {
+                comp.innerText = "TAMAÑOS DISTINTOS ≠";
+                comp.className = "font-bold text-lg text-red-500";
             }
+
+            // Cálculo Resultado (Fracción simple)
+            let resN, resD;
+            if (state.mode === 'sum') {
+                resN = (state.n1 * state.d2) + (state.n2 * state.d1);
+                resD = state.d1 * state.d2;
+            } else {
+                resN = (state.n1 * state.d2) - (state.n2 * state.d1);
+                resD = state.d1 * state.d2;
+            }
+            
+            document.getElementById('final-res').innerText = `${resN} / ${resD}`;
+            drawBar('vis-res', resN, resD, 'active');
+        }
+
+        function drawBar(id, num, den, colorClass) {
+            const container = document.getElementById(id);
+            container.innerHTML = '';
+            // Ajustamos el ancho visual basado en la fracción para que se vea el "tamaño" real
+            const totalSegments = Math.max(den, num); 
+            for (let i = 0; i < totalSegments; i++) {
+                const seg = document.createElement('div');
+                seg.className = `segment ${i < num ? colorClass : ''}`;
+                seg.style.width = `${100 / totalSegments}%`;
+                container.appendChild(seg);
+            }
+        }
+
+        // Toggle Modo
+        document.getElementById('op-btn').onclick = () => {
+            state.mode = state.mode === 'sum' ? 'sub' : 'sum';
+            document.getElementById('op-type').innerText = state.mode === 'sum' ? 'SUMA (+)' : 'RESTA (-)';
+            update();
         };
 
-        window.onload = () => app.init();
+        // Eventos
+        ['n1', 'd1', 'n2', 'd2'].forEach(id => {
+            document.getElementById(id).oninput = update;
+        });
+
+        // Inicio
+        update();
     </script>
 </body>
 </html>
