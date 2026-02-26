@@ -3,193 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fraction Reactor: Sum & Rest 🌀</title>
+    <title>Geometric Matrix: Fractal Math 💠</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --neon-green: #0aff00; --bg-dark: #0a0a12; }
+        :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --neon-yellow: #f0f000; --bg-dark: #050508; }
         body { 
             font-family: 'Share Tech Mono', monospace; 
             background-color: var(--bg-dark); 
             color: #fff; 
-            min-height: 100vh;
-            overflow-x: hidden;
+            margin: 0; padding: 0;
         }
         .title-font { font-family: 'Orbitron', sans-serif; }
         .glass-panel { 
-            background: rgba(20, 20, 35, 0.8); 
-            backdrop-filter: blur(10px); 
+            background: rgba(15, 15, 25, 0.9); 
             border: 1px solid rgba(0, 243, 255, 0.2);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
         }
-        .neon-text-blue { text-shadow: 0 0 10px var(--neon-blue); color: var(--neon-blue); }
-        .neon-text-pink { text-shadow: 0 0 10px var(--neon-pink); color: var(--neon-pink); }
+        /* Grid de fondo tipo radar */
+        .radar-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px; z-index: -1;
+        }
+        /* Contenedor principal a pantalla completa */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh; gap: 1rem; padding: 1rem;
+        }
+        /* Estilo de la Matriz Geométrica */
+        #geometry-canvas {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.4); border-radius: 20px;
+            position: relative; overflow: hidden;
+        }
+        .matrix-cell {
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            transition: all 0.4s ease;
+        }
+        .matrix-cell.filled { background: var(--neon-blue); box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
+        .matrix-cell.overlap { background: var(--neon-pink); box-shadow: 0 0 20px var(--neon-pink); }
         
-        /* Estilo de los Sliders */
-        input[type=range] { -webkit-appearance: none; background: transparent; }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px; cursor: pointer; background: #333; border-radius: 2px;
-            border: 1px solid var(--neon-blue);
-        }
-        input[type=range]::-webkit-slider-thumb {
-            height: 18px; width: 18px; border-radius: 50%; background: var(--neon-blue);
-            cursor: pointer; -webkit-appearance: none; margin-top: -8px;
-            box-shadow: 0 0 10px var(--neon-blue);
-        }
-
-        /* Representación de Fracción */
-        .fraction-bar {
-            height: 40px; border: 2px solid #333; display: flex; border-radius: 5px; overflow: hidden;
-            background: #111; position: relative;
-        }
-        .segment { border-right: 1px solid rgba(255,255,255,0.1); height: 100%; transition: all 0.3s; }
-        .segment.active { background: linear-gradient(90deg, var(--neon-blue), #0088ff); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-        .segment.active-pink { background: linear-gradient(90deg, var(--neon-pink), #ff0088); }
+        input[type=range] { width: 100%; accent-color: var(--neon-blue); }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body>
 
-    <div class="max-w-4xl mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl title-font font-black neon-text-blue mb-2 italic">FRACTION REACTOR</h1>
-            <p class="text-gray-400 tracking-widest text-xs uppercase">> Módulo de Análisis Geométrico v1.0</p>
-        </header>
+    <div class="radar-bg"></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <main class="main-layout">
+        
+        <aside class="glass-panel p-6 rounded-2xl flex flex-col gap-6 overflow-y-auto">
+            <header>
+                <h1 class="title-font text-2xl neon-text-blue text-cyan-400 italic font-black">GEOMETRIC MATRIX</h1>
+                <p class="text-[10px] text-gray-500 tracking-[0.3em]">ANALYSIS MODULE // 2026</p>
+            </header>
+
+            <div class="flex gap-2">
+                <button onclick="setMode('mult')" id="btn-mult" class="flex-1 py-2 rounded border border-cyan-500 bg-cyan-500/20 text-xs font-bold">MULTIPLICACIÓN</button>
+                <button onclick="setMode('div')" id="btn-div" class="flex-1 py-2 rounded border border-gray-700 text-xs font-bold">DIVISIÓN</button>
+            </div>
+
+            <div class="p-4 bg-black/60 rounded border-l-2 border-cyan-400">
+                <p class="text-[10px] text-cyan-400 mb-4">FACTOR ALFA (Eje X)</p>
+                <div class="text-3xl title-font text-center mb-4" id="label-a">1 / 2</div>
+                <input type="range" id="n1" min="1" max="10" value="1">
+                <input type="range" id="d1" min="1" max="10" value="2" class="mt-4">
+            </div>
+
+            <div class="p-4 bg-black/60 rounded border-l-2 border-pink-400">
+                <p class="text-[10px] text-pink-400 mb-4">FACTOR BETA (Eje Y)</p>
+                <div class="text-3xl title-font text-center mb-4" id="label-b">1 / 3</div>
+                <input type="range" id="n2" min="1" max="10" value="1">
+                <input type="range" id="d2" min="1" max="10" value="3" class="mt-4">
+            </div>
+
+            <div class="mt-auto p-4 glass-panel rounded border-yellow-500/50">
+                <p class="text-[10px] text-yellow-500 uppercase font-bold mb-2">Interpretación Lógica:</p>
+                <p id="logic-text" class="text-xs text-gray-300 leading-relaxed"></p>
+            </div>
+        </aside>
+
+        <section class="flex flex-col gap-4">
+            <div id="geometry-canvas" class="glass-panel">
+                <div id="matrix-container" style="display: grid; width: 80%; height: 80%;"></div>
+            </div>
             
-            <div class="glass-panel p-6 rounded-2xl">
-                <h3 class="title-font text-sm text-cyan-400 mb-6 flex items-center gap-2">
-                    <span class="animate-pulse">●</span> ENTRADA DE DATOS
-                </h3>
-                
-                <div class="mb-8 p-4 bg-black/40 rounded-lg border-l-4 border-cyan-500">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-xs">FRACCIÓN A</span>
-                        <span id="label-f1" class="neon-text-blue font-bold text-xl">1 / 2</span>
-                    </div>
-                    <label class="text-[10px] text-gray-500 uppercase italic">Numerador</label>
-                    <input type="range" id="n1" min="1" max="10" value="1" class="w-full mb-4">
-                    <label class="text-[10px] text-gray-500 uppercase italic">Denominador</label>
-                    <input type="range" id="d1" min="1" max="12" value="2" class="w-full">
+            <div class="h-32 glass-panel p-4 rounded-2xl flex items-center justify-around">
+                <div class="text-center">
+                    <p class="text-[10px] text-gray-500 uppercase">Numérica</p>
+                    <div id="res-num" class="text-4xl title-font text-white">1 / 6</div>
                 </div>
-
-                <div class="flex justify-center mb-8">
-                    <button id="op-btn" class="glass-panel px-6 py-2 rounded-full border-pink-500 text-pink-500 font-bold hover:bg-pink-500/20 transition-all">
-                        MODO: <span id="op-type">SUMA (+)</span>
-                    </button>
-                </div>
-
-                <div class="p-4 bg-black/40 rounded-lg border-l-4 border-pink-500">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-xs">FRACCIÓN B</span>
-                        <span id="label-f2" class="neon-text-pink font-bold text-xl">1 / 3</span>
-                    </div>
-                    <label class="text-[10px] text-gray-500 uppercase italic">Numerador</label>
-                    <input type="range" id="n2" min="1" max="10" value="1" class="w-full mb-4">
-                    <label class="text-[10px] text-gray-500 uppercase italic">Denominador</label>
-                    <input type="range" id="d2" min="1" max="12" value="3" class="w-full">
+                <div class="h-full w-[1px] bg-gray-800"></div>
+                <div class="text-center">
+                    <p class="text-[10px] text-gray-500 uppercase">Decimal</p>
+                    <div id="res-dec" class="text-4xl title-font text-cyan-400">0.166</div>
                 </div>
             </div>
+        </section>
 
-            <div class="glass-panel p-6 rounded-2xl flex flex-col justify-between">
-                <div>
-                    <h3 class="title-font text-sm text-pink-400 mb-6 flex items-center gap-2">
-                        <span class="animate-pulse">●</span> REPRESENTACIÓN GEOMÉTRICA
-                    </h3>
-
-                    <div class="mb-6">
-                        <p class="text-[10px] text-gray-500 mb-1">UNIDAD A</p>
-                        <div id="vis-f1" class="fraction-bar"></div>
-                    </div>
-
-                    <div class="mb-6">
-                        <p class="text-[10px] text-gray-500 mb-1">UNIDAD B</p>
-                        <div id="vis-f2" class="fraction-bar"></div>
-                    </div>
-
-                    <div id="comparator" class="text-center p-3 rounded border border-dashed border-gray-700 mb-6">
-                        <span class="text-xs uppercase block mb-1">Estado de Denominadores</span>
-                        <div id="comp-result" class="font-bold text-lg">DIFERENTES ≠</div>
-                    </div>
-                </div>
-
-                <div class="bg-cyan-500/10 p-4 rounded-xl border border-cyan-500/30">
-                    <p class="text-center text-[10px] text-cyan-500 font-bold mb-2 tracking-widest uppercase">Resultado Estimado</p>
-                    <div id="final-res" class="text-3xl text-center title-font font-bold">5 / 6</div>
-                    <div id="vis-res" class="fraction-bar mt-4 border-cyan-400 shadow-[0_0_15px_rgba(0,243,255,0.3)]"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <script>
-        const state = { n1: 1, d1: 2, n2: 1, d2: 3, mode: 'sum' };
+        let mode = 'mult';
+        
+        function setMode(m) {
+            mode = m;
+            document.getElementById('btn-mult').className = m === 'mult' ? 'flex-1 py-2 rounded border border-cyan-500 bg-cyan-500/20 text-xs font-bold' : 'flex-1 py-2 rounded border border-gray-700 text-xs font-bold';
+            document.getElementById('btn-div').className = m === 'div' ? 'flex-1 py-2 rounded border border-pink-500 bg-pink-500/20 text-xs font-bold' : 'flex-1 py-2 rounded border border-gray-700 text-xs font-bold';
+            update();
+        }
 
         function update() {
-            // Obtener valores
-            state.n1 = parseInt(document.getElementById('n1').value);
-            state.d1 = parseInt(document.getElementById('d1').value);
-            state.n2 = parseInt(document.getElementById('n2').value);
-            state.d2 = parseInt(document.getElementById('d2').value);
+            const n1 = parseInt(document.getElementById('n1').value);
+            const d1 = parseInt(document.getElementById('d1').value);
+            const n2 = parseInt(document.getElementById('n2').value);
+            const d2 = parseInt(document.getElementById('d2').value);
 
-            // Actualizar etiquetas
-            document.getElementById('label-f1').innerText = `${state.n1} / ${state.d1}`;
-            document.getElementById('label-f2').innerText = `${state.n2} / ${state.d2}`;
+            document.getElementById('label-a').innerText = `${n1} / ${d1}`;
+            document.getElementById('label-b').innerText = `${n2} / ${d2}`;
 
-            // Dibujar barras
-            drawBar('vis-f1', state.n1, state.d1, 'active');
-            drawBar('vis-f2', state.n2, state.d2, 'active-pink');
-
-            // Comparador
-            const comp = document.getElementById('comp-result');
-            if (state.d1 === state.d2) {
-                comp.innerText = "TAMAÑOS IGUALES =";
-                comp.className = "font-bold text-lg text-green-400 animate-bounce";
-            } else {
-                comp.innerText = "TAMAÑOS DISTINTOS ≠";
-                comp.className = "font-bold text-lg text-red-500";
-            }
-
-            // Cálculo Resultado (Fracción simple)
-            let resN, resD;
-            if (state.mode === 'sum') {
-                resN = (state.n1 * state.d2) + (state.n2 * state.d1);
-                resD = state.d1 * state.d2;
-            } else {
-                resN = (state.n1 * state.d2) - (state.n2 * state.d1);
-                resD = state.d1 * state.d2;
-            }
-            
-            document.getElementById('final-res').innerText = `${resN} / ${resD}`;
-            drawBar('vis-res', resN, resD, 'active');
-        }
-
-        function drawBar(id, num, den, colorClass) {
-            const container = document.getElementById(id);
+            const container = document.getElementById('matrix-container');
             container.innerHTML = '';
-            // Ajustamos el ancho visual basado en la fracción para que se vea el "tamaño" real
-            const totalSegments = Math.max(den, num); 
-            for (let i = 0; i < totalSegments; i++) {
-                const seg = document.createElement('div');
-                seg.className = `segment ${i < num ? colorClass : ''}`;
-                seg.style.width = `${100 / totalSegments}%`;
-                container.appendChild(seg);
+
+            if (mode === 'mult') {
+                // MODELO DE ÁREA: La multiplicación es el área solapada
+                container.style.gridTemplateColumns = `repeat(${d1}, 1fr)`;
+                container.style.gridTemplateRows = `repeat(${d2}, 1fr)`;
+                
+                for (let r = 0; r < d2; r++) {
+                    for (let c = 0; c < d1; c++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'matrix-cell';
+                        if (c < n1 && r < n2) cell.classList.add('overlap');
+                        else if (c < n1) cell.style.background = 'rgba(0, 243, 255, 0.1)';
+                        else if (r < n2) cell.style.background = 'rgba(255, 0, 255, 0.1)';
+                        container.appendChild(cell);
+                    }
+                }
+                document.getElementById('res-num').innerText = `${n1 * n2} / ${d1 * d2}`;
+                document.getElementById('res-dec').innerText = ((n1/d1)*(n2/d2)).toFixed(3);
+                document.getElementById('logic-text').innerText = `Estamos calculando el ${n2}/${d2} partes de una unidad que ya estaba dividida en ${n1}/${d1}. El área rosa representa el producto final.`;
+            } else {
+                // MODELO DE DIVISIÓN: Cuántas veces cabe B en A
+                // Simplificado: Visualizamos A y comparamos con B
+                container.style.gridTemplateColumns = `repeat(${d1 * d2}, 1fr)`;
+                container.style.gridTemplateRows = `repeat(2, 1fr)`;
+                
+                // Dibujar Fracción A arriba, B abajo
+                const total = d1 * d2;
+                for(let i=0; i < total*2; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'matrix-cell';
+                    // Lógica visual de "comparación de tamaños"
+                    container.appendChild(cell);
+                }
+                
+                document.getElementById('res-num').innerText = `${n1 * d2} / ${d1 * n2}`;
+                document.getElementById('res-dec').innerText = ((n1/d1)/(n2/d2)).toFixed(3);
+                document.getElementById('logic-text').innerText = `Dividir es repartir. ¿Cuántas veces cabe la pieza ${n2}/${d2} en la pieza ${n1}/${d1}? El resultado indica esa proporción física.`;
             }
         }
 
-        // Toggle Modo
-        document.getElementById('op-btn').onclick = () => {
-            state.mode = state.mode === 'sum' ? 'sub' : 'sum';
-            document.getElementById('op-type').innerText = state.mode === 'sum' ? 'SUMA (+)' : 'RESTA (-)';
-            update();
-        };
-
-        // Eventos
-        ['n1', 'd1', 'n2', 'd2'].forEach(id => {
-            document.getElementById(id).oninput = update;
-        });
-
-        // Inicio
+        ['n1', 'd1', 'n2', 'd2'].forEach(id => document.getElementById(id).oninput = update);
         update();
     </script>
 </body>
