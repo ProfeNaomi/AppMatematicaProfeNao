@@ -16,69 +16,59 @@ function processEquation() {
     let input = document.getElementById('equation-input').value.toLowerCase();
     const container = document.getElementById('steps-container');
     const status = document.getElementById('status-tag');
-    container.innerHTML = '';
-    
+    container.innerHTML = "";
+
+    // Validación de igualdad
     if (!input.includes('=')) {
-        container.innerHTML = "<div class='text-red-500 p-4 border border-red-500 rounded'>❌ ERROR: No detecto el signo '='. Una ecuación requiere una igualdad.</div>";
+        container.innerHTML = "<div class='text-red-500'>❌ ERROR: No detecto el signo '='.</div>";
         return;
     }
 
-    // --- MOTOR DE AUTOCORRECCIÓN (Para evitar errores de sintaxis) ---
-    // 1. Reemplaza 'raiz' por 'sqrt'
+    // --- MOTOR DE AUTOCORRECCIÓN ---
     input = input.replace(/raiz/g, 'sqrt');
-    // 2. Inserta '*' entre números y letras (ej: 2x -> 2*x)
     input = input.replace(/(\d)([a-z])/g, '$1*$2');
-    // 3. Inserta '*' entre paréntesis y números/letras (ej: 2(x) -> 2*(x))
     input = input.replace(/(\d)(\()/g, '$1*$2');
     input = input.replace(/(\))(\d)/g, '$1*$2');
 
     try {
-        let [leftSide, rightSide] = input.split('=');
+        let parts = input.split('=');
+        let leftSide = parts[0];
+        let rightSide = parts[1];
+
         addStep("Escaneo del Sistema", `${leftSide} = ${rightSide}`, "Entrada normalizada");
 
-        // Simplificar ambos lados (resuelve raíces y suma términos semejantes)
+        // Simplificación con Math.js
         let simplifiedLeft = math.simplify(leftSide);
         let simplifiedRight = math.simplify(rightSide);
         
         addStep("Simplificación", `${simplifiedLeft.toString()} = ${simplifiedRight.toString()}`, "Resolviendo raíces y constantes");
 
-        // Creamos la expresión: izquierda - derecha = 0
+        // Convertir a forma: expresión = 0
         const equation = math.parse(`(${simplifiedLeft.toString()}) - (${simplifiedRight.toString()})`);
         
-        // Extraemos coeficientes de x y la constante
-        // Derivada de ax + b respecto a x es 'a'
+        // Obtener coeficientes
         const a = math.derivative(equation, 'x').evaluate({x: 1});
-        // Si evaluamos x=0, obtenemos la constante 'b'
         const b = equation.evaluate({x: 0});
 
-        // Análisis de Casos Especiales
         if (a === 0) {
             if (b === 0) {
-                addStep("Análisis Final", "0 = 0", "INFINITAS SOLUCIONES: Es una identidad matemática.");
+                addStep("Análisis Final", "0 = 0", "INFINITAS SOLUCIONES (Identidad)");
             } else {
-                addStep("Análisis Final", `${b} = 0`, "SIN SOLUCIÓN: La igualdad es falsa (Contradicción).");
+                addStep("Análisis Final", `${b} = 0`, "SIN SOLUCIÓN (Contradicción)");
             }
         } else {
-            // Despeje: ax + b = 0  => x = -b / a
             let xValue = -b / a;
+            addStep("Trasposición", `${a}x = ${-b}`, "Agrupando términos");
+            addStep("Despeje", `x = ${-b} / ${a}`, "Aislando x");
             
-            addStep("Trasposición", `${a}x = ${-b}`, "Agrupando términos con x");
-            addStep("Despeje", `x = ${-b} / ${a}`, "Aislando la variable");
-            
-            // Resultado final limpio
             const finalResult = math.format(xValue, {precision: 4});
-            addStep("SOLUCIÓN", `x = ${finalResult}`, "Proceso de despeje finalizado con éxito.");
+            addStep("SOLUCIÓN", `x = ${finalResult}`, "Análisis completado");
         }
 
         status.innerText = "ANÁLISIS COMPLETADO";
         status.className = "text-green-400 italic text-[10px]";
 
     } catch (err) {
-        container.innerHTML = `
-            <div class='text-red-400 p-4 border border-red-400 bg-red-900/20 rounded'>
-                <strong>ERROR DE PROCESAMIENTO:</strong><br>
-                Asegúrate de que la ecuación sea lineal (grado 1).<br>
-                <span class='text-xs opacity-70'>Detalle técnico: ${err.message}</span>
-            </div>`;
+        container.innerHTML = `<div class='text-red-400'>ERROR: Verifica que la ecuación sea de grado 1.</div>`;
     }
 }
