@@ -1,143 +1,84 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linear Engine: Step-by-Step 🖥️</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <style>
-        :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --bg-dark: #080810; }
-        body { 
-            font-family: 'Share Tech Mono', monospace; 
-            background-color: var(--bg-dark); 
-            color: #fff; margin: 0; padding: 0; overflow-x: hidden;
-        }
-        .title-font { font-family: 'Orbitron', sans-serif; }
-        .glass-panel { 
-            background: rgba(15, 15, 25, 0.9); 
-            border: 1px solid rgba(0, 243, 255, 0.2);
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
-        }
-        .step-card {
-            border-left: 3px solid var(--neon-blue);
-            background: rgba(0, 243, 255, 0.05);
-            margin-bottom: 10px; padding: 15px;
-            animation: slideIn 0.5s ease forwards;
-        }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+function addStep(title, formula, detail) {
+    const container = document.getElementById('steps-container');
+    const step = document.createElement('div');
+    step.className = 'step-card';
+    step.innerHTML = `
+        <div class="flex justify-between items-center mb-1">
+            <span class="text-cyan-400 font-bold text-xs uppercase">${title}</span>
+            <span class="text-[10px] text-gray-500 italic">${detail}</span>
+        </div>
+        <div class="text-2xl title-font text-white">${formula}</div>
+    `;
+    container.appendChild(step);
+}
+
+function processEquation() {
+    let input = document.getElementById('equation-input').value.toLowerCase();
+    const container = document.getElementById('steps-container');
+    const status = document.getElementById('status-tag');
+    container.innerHTML = '';
+    
+    if (!input.includes('=')) {
+        container.innerHTML = "<div class='text-red-500 p-4 border border-red-500 rounded'>❌ ERROR: No detecto el signo '='. Una ecuación requiere una igualdad.</div>";
+        return;
+    }
+
+    // --- MOTOR DE AUTOCORRECCIÓN (Para evitar errores de sintaxis) ---
+    // 1. Reemplaza 'raiz' por 'sqrt'
+    input = input.replace(/raiz/g, 'sqrt');
+    // 2. Inserta '*' entre números y letras (ej: 2x -> 2*x)
+    input = input.replace(/(\d)([a-z])/g, '$1*$2');
+    // 3. Inserta '*' entre paréntesis y números/letras (ej: 2(x) -> 2*(x))
+    input = input.replace(/(\d)(\()/g, '$1*$2');
+    input = input.replace(/(\))(\d)/g, '$1*$2');
+
+    try {
+        let [leftSide, rightSide] = input.split('=');
+        addStep("Escaneo del Sistema", `${leftSide} = ${rightSide}`, "Entrada normalizada");
+
+        // Simplificar ambos lados (resuelve raíces y suma términos semejantes)
+        let simplifiedLeft = math.simplify(leftSide);
+        let simplifiedRight = math.simplify(rightSide);
         
-        input { background: #000; border: 2px solid #333; color: var(--neon-blue); font-family: 'Orbitron'; }
-        input:focus { border-color: var(--neon-blue); outline: none; box-shadow: 0 0 10px var(--neon-blue); }
-        .btn-solve { background: var(--neon-blue); color: #000; font-weight: bold; transition: 0.3s; }
-        .btn-solve:hover { box-shadow: 0 0 20px var(--neon-blue); transform: scale(1.02); }
-    </style>
-</head>
-<body class="p-4 md:p-10">
+        addStep("Simplificación", `${simplifiedLeft.toString()} = ${simplifiedRight.toString()}`, "Resolviendo raíces y constantes");
 
-    <div class="max-w-6xl mx-auto">
-        <header class="mb-10 text-center">
-            <h1 class="text-4xl md:text-6xl title-font font-black italic text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
-                LINEAR SOLVER <span class="text-white text-2xl">v1.0</span>
-            </h1>
-            <p class="text-gray-500 tracking-[0.4em] text-xs mt-2 uppercase">Procesador de Ecuaciones de Primer Grado</p>
-        </header>
+        // Creamos la expresión: izquierda - derecha = 0
+        const equation = math.parse(`(${simplifiedLeft.toString()}) - (${simplifiedRight.toString()})`);
+        
+        // Extraemos coeficientes de x y la constante
+        // Derivada de ax + b respecto a x es 'a'
+        const a = math.derivative(equation, 'x').evaluate({x: 1});
+        // Si evaluamos x=0, obtenemos la constante 'b'
+        const b = equation.evaluate({x: 0});
 
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        // Análisis de Casos Especiales
+        if (a === 0) {
+            if (b === 0) {
+                addStep("Análisis Final", "0 = 0", "INFINITAS SOLUCIONES: Es una identidad matemática.");
+            } else {
+                addStep("Análisis Final", `${b} = 0`, "SIN SOLUCIÓN: La igualdad es falsa (Contradicción).");
+            }
+        } else {
+            // Despeje: ax + b = 0  => x = -b / a
+            let xValue = -b / a;
             
-            <section class="glass-panel p-8 rounded-3xl h-fit">
-                <h2 class="title-font text-cyan-400 text-sm mb-6 uppercase tracking-wider">Configuración de Misión</h2>
-                
-                <div class="mb-6">
-                    <label class="block text-xs text-gray-400 mb-2 italic">INGRESA LA ECUACIÓN (ej: 2x + sqrt(16) = 10)</label>
-                    <input type="text" id="equation-input" placeholder="2x + 4 = 12" class="w-full p-4 rounded-lg text-xl mb-2">
-                    <p class="text-[10px] text-gray-500 italic">Nota: Usa 'sqrt(n)' para raíces cuadradas.</p>
-                </div>
-
-                <button onclick="processEquation()" class="btn-solve w-full py-4 rounded-xl title-font uppercase tracking-widest">
-                    EJECUTAR ANÁLISIS
-                </button>
-            </section>
-
-            <section id="results-area" class="lg:col-span-2 glass-panel p-8 rounded-3xl min-h-[400px]">
-                <h2 class="title-font text-pink-400 text-sm mb-6 uppercase tracking-wider flex justify-between">
-                    <span>Log de Despeje Lógico</span>
-                    <span id="status-tag" class="text-gray-600 italic text-[10px]">Esperando datos...</span>
-                </h2>
-
-                <div id="steps-container">
-                    <div class="text-gray-600 italic text-center mt-20">Ingresa una ecuación para iniciar el escaneo...</div>
-                </div>
-            </section>
-
-        </main>
-    </div>
-
-    <script>
-        function addStep(title, formula, detail) {
-            const container = document.getElementById('steps-container');
-            const step = document.createElement('div');
-            step.className = 'step-card';
-            step.innerHTML = `
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-cyan-400 font-bold text-xs uppercase">${title}</span>
-                    <span class="text-[10px] text-gray-500 italic">${detail}</span>
-                </div>
-                <div class="text-2xl title-font text-white">${formula}</div>
-            `;
-            container.appendChild(step);
+            addStep("Trasposición", `${a}x = ${-b}`, "Agrupando términos con x");
+            addStep("Despeje", `x = ${-b} / ${a}`, "Aislando la variable");
+            
+            // Resultado final limpio
+            const finalResult = math.format(xValue, {precision: 4});
+            addStep("SOLUCIÓN", `x = ${finalResult}`, "Proceso de despeje finalizado con éxito.");
         }
 
-        function processEquation() {
-            const input = document.getElementById('equation-input').value.replace(/\s+/g, '');
-            const container = document.getElementById('steps-container');
-            const status = document.getElementById('status-tag');
-            container.innerHTML = '';
-            
-            if (!input.includes('=')) {
-                container.innerHTML = "<div class='text-red-500'>ERROR: Falta el signo '='.</div>";
-                return;
-            }
+        status.innerText = "ANÁLISIS COMPLETADO";
+        status.className = "text-green-400 italic text-[10px]";
 
-            status.innerText = "PROCESANDO...";
-            status.classList.remove('text-gray-600');
-            status.classList.add('text-green-400');
-
-            try {
-                let [left, right] = input.split('=');
-                addStep("Ecuación Inicial", `${left} = ${right}`, "Entrada detectada");
-
-                // 1. Simplificar raíces y operaciones numéricas
-                let sLeft = math.simplify(left).toString();
-                let sRight = math.simplify(right).toString();
-                addStep("Simplificación", `${sLeft} = ${sRight}`, "Resolviendo raíces y constantes");
-
-                // Lógica de despeje simple (ax + b = c)
-                // Para este prototipo, evaluamos el valor de X usando álgebra de math.js
-                const node = math.parse(`${sLeft} - (${sRight})`);
-                const coeff = node.derivative('x').evaluate({x: 1}); // Coeficiente de x
-                const constant = node.evaluate({x: 0}); // Parte constante
-
-                if (coeff === 0) {
-                    if (constant === 0) {
-                        addStep("Caso Especial", "0 = 0", "Infinitas soluciones (Identidad)");
-                    } else {
-                        addStep("Caso Especial", "Inconsistencia", "No existe solución");
-                    }
-                } else {
-                    // x = -constant / coeff
-                    let solution = -constant / coeff;
-                    addStep("Trasposición", `${coeff}x = ${-constant}`, "Moviendo constantes al otro lado");
-                    addStep("Despeje Final", `x = ${-constant} / ${coeff}`, "Dividiendo por el coeficiente");
-                    addStep("RESULTADO", `x = ${math.round(solution, 4)}`, "Análisis completado");
-                }
-
-            } catch (err) {
-                container.innerHTML = `<div class='text-red-500'>ERROR DE SINTAXIS: Verifica la escritura (ej: usa 2*x para multiplicar).</div>`;
-                console.error(err);
-            }
-        }
-    </script>
-</body>
-</html>
+    } catch (err) {
+        container.innerHTML = `
+            <div class='text-red-400 p-4 border border-red-400 bg-red-900/20 rounded'>
+                <strong>ERROR DE PROCESAMIENTO:</strong><br>
+                Asegúrate de que la ecuación sea lineal (grado 1).<br>
+                <span class='text-xs opacity-70'>Detalle técnico: ${err.message}</span>
+            </div>`;
+    }
+}
